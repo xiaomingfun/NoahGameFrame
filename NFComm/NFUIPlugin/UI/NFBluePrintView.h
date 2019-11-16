@@ -31,6 +31,8 @@ class NFBluePrintView : public NFIView
 {
 public:
 	NFBluePrintView(NFIPluginManager* p, NFViewType vt);
+
+
 };
 
 #endif

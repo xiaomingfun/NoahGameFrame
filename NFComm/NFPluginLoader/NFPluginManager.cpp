@@ -33,13 +33,23 @@
 #include "NFComm/NFPluginModule/NFPlatform.h"
 
 #if NF_PLATFORM == NF_PLATFORM_WIN
+#pragma comment( lib, "opengl32.lib" )
 #pragma comment( lib, "ws2_32.lib" )
+#pragma comment( lib, "version.lib" )
+//#pragma comment( lib, "SDL2maind.lib" )
+#pragma comment( lib, "msimg32.lib" )
+#pragma comment( lib, "winmm.lib" )
+#pragma comment( lib, "imm32.lib" )
+//#pragma comment( lib, "msvcrt.lib" )
+#pragma comment (lib, "Setupapi.lib")
 
 #ifndef NF_DYNAMIC_PLUGIN
 #ifdef NF_DEBUG_MODE
 #pragma comment( lib, "libprotobufd.lib" )
+#pragma comment( lib, "SDL2d.lib" )
 #else
 #pragma comment( lib, "libprotobuf.lib" )
+//#pragma comment( lib, "SDL2.lib" )
 #endif
 
 #pragma comment( lib, "NFCore.lib" )
@@ -62,6 +72,8 @@
 #pragma comment( lib, "NFNoSqlPlugin.lib" )
 #pragma comment( lib, "NFSecurityPlugin.lib" )
 #pragma comment( lib, "NFTestPlugin.lib" )
+#pragma comment( lib, "NFUIPlugin.lib" )
+#pragma comment( lib, "NFBluePrintPlugin.lib" )
 
 #pragma comment( lib, "NFDBLogicPlugin.lib" )
 #pragma comment( lib, "NFDBNet_ClientPlugin.lib" )
@@ -123,6 +135,9 @@
 #include "NFComm/NFNoSqlPlugin/NFNoSqlPlugin.h"
 #include "NFComm/NFSecurityPlugin/NFSecurityPlugin.h"
 #include "NFComm/NFTestPlugin/NFTestPlugin.h"
+#include "NFComm/NFUIPlugin/NFUIPlugin.h"
+#include "NFComm/NFBluePrintPlugin/NFBluePrintPlugin.h"
+
 //DB
 #include "NFServer/NFDBLogicPlugin/NFDBLogicPlugin.h"
 #include "NFServer/NFDBNet_ClientPlugin/NFDBNet_ClientPlugin.h"
@@ -153,7 +168,7 @@
 
 void CoroutineExecute(void* arg)
 {
-	NFPluginManager::Instance()->Execute();
+	//NFPluginManager::Instance()->Execute();
 }
 
 NFPluginManager::NFPluginManager() : NFIPluginManager()
@@ -255,20 +270,31 @@ bool NFPluginManager::LoadPluginConfig()
 
     rapidxml::xml_node<>* pRoot = xDoc.first_node();
     rapidxml::xml_node<>* pAppNameNode = pRoot->first_node(mstrAppName.c_str());
-    if (!pAppNameNode)
+    if (pAppNameNode)
     {
-        NFASSERT(0, "There are no App ID", __FILE__, __FUNCTION__);
-        return false;
+		for (rapidxml::xml_node<>* pPluginNode = pAppNameNode->first_node("Plugin"); pPluginNode; pPluginNode = pPluginNode->next_sibling("Plugin"))
+		{
+			const char* strPluginName = pPluginNode->first_attribute("Name")->value();
+
+			mPluginNameMap.insert(PluginNameMap::value_type(strPluginName, true));
+
+			//std::cout << strPluginName << std::endl;
+		}
     }
-
-    for (rapidxml::xml_node<>* pPluginNode = pAppNameNode->first_node("Plugin"); pPluginNode; pPluginNode = pPluginNode->next_sibling("Plugin"))
-    {
-        const char* strPluginName = pPluginNode->first_attribute("Name")->value();
-
-        mPluginNameMap.insert(PluginNameMap::value_type(strPluginName, true));
-
-		//std::cout << strPluginName << std::endl;
-    }
+	else
+	{
+		for (rapidxml::xml_node<>* pServerNode = pRoot->first_node(); pServerNode; pServerNode = pServerNode->next_sibling())
+		{
+			for (rapidxml::xml_node<>* pPluginNode = pServerNode->first_node("Plugin"); pPluginNode; pPluginNode = pPluginNode->next_sibling("Plugin"))
+			{
+				const char* strPluginName = pPluginNode->first_attribute("Name")->value();
+				if (mPluginNameMap.find(strPluginName) == mPluginNameMap.end())
+				{
+					mPluginNameMap.insert(PluginNameMap::value_type(strPluginName, true));
+				}
+			}
+		}
+	}
 
     return true;
 }
@@ -289,7 +315,9 @@ bool NFPluginManager::LoadStaticPlugin()
 	CREATE_PLUGIN(this, NFNoSqlPlugin)
 	CREATE_PLUGIN(this, NFSecurityPlugin)
 	CREATE_PLUGIN(this, NFTestPlugin)
-
+	CREATE_PLUGIN(this, NFUIPlugin)
+	CREATE_PLUGIN(this, NFBluePrintPlugin)
+		
 //DB
 	CREATE_PLUGIN(this, NFDBLogicPlugin)
 	CREATE_PLUGIN(this, NFDBNet_ClientPlugin)
