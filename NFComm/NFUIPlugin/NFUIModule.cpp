@@ -32,9 +32,6 @@
 #include "UI/NFBluePrintView.h"
 #include "UI/NFProjectView.h"
 #include "UI/NFGameView.h"
-#include "UI/NFInspectorView.h"
-#include "UI/NFContainerView.h"
-#include "UI/NFOperatorView.h"
 
 
 
@@ -51,18 +48,14 @@ bool NFUIModule::Awake()
 
 bool NFUIModule::Init()
 {
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFContainerView(pPluginManager, NFViewType::ContainerView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFOperatorView(pPluginManager, NFViewType::OperatorView)));
-
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFGodView(pPluginManager, NFViewType::GodView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFSceneView(pPluginManager, NFViewType::SceneView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFHierachyView(pPluginManager, NFViewType::HierachyView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFConsoleView(pPluginManager, NFViewType::ConsoleView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFProfileView(pPluginManager, NFViewType::ProfileView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFInspectorView(pPluginManager, NFViewType::InspectorView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFBluePrintView(pPluginManager, NFViewType::BluePrintView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFProjectView(pPluginManager, NFViewType::ProjectView)));
-    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFGameView(pPluginManager, NFViewType::GameView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFGodView(pPluginManager, NFIView::NFViewType::GodView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFSceneView(pPluginManager, NFIView::NFViewType::SceneView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFHierachyView(pPluginManager, NFIView::NFViewType::HierachyView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFConsoleView(pPluginManager, NFIView::NFViewType::ConsoleView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFProfileView(pPluginManager, NFIView::NFViewType::InspectorView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFBluePrintView(pPluginManager, NFIView::NFViewType::BluePrintView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFProjectView(pPluginManager, NFIView::NFViewType::ProjectView)));
+    mViewList.push_back(NF_SHARE_PTR<NFIView>(NF_NEW NFGameView(pPluginManager, NFIView::NFViewType::GameView)));
    
 	return true;
 }
@@ -113,12 +106,41 @@ bool NFUIModule::Execute()
 		ImGui_ImplSDL2_NewFrame(window);
 		ImGui::NewFrame();
 
-		for (auto view : mViewList)
+		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+		if (show_demo_window)
+			ImGui::ShowDemoWindow(&show_demo_window);
+
+		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 		{
-			view->ExecuteBegin();
-			view->Execute();
-			view->SubRender();
-			view->ExecuteEnd();
+			static float f = 0.0f;
+			static int counter = 0;
+
+			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+			ImGui::Checkbox("Another Window", &show_another_window);
+
+			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+			if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+				counter++;
+			ImGui::SameLine();
+			ImGui::Text("counter = %d", counter);
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::End();
+		}
+
+		// 3. Show another simple window.
+		if (show_another_window)
+		{
+			ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+			ImGui::Text("Hello from another window!");
+			if (ImGui::Button("Close Me"))
+				show_another_window = false;
+			ImGui::End();
 		}
 
 		// Rendering
@@ -198,7 +220,7 @@ int NFUIModule::SetupGUI()
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	window = SDL_CreateWindow("NoahFrame BluePrint Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+	window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
 	gl_context = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, gl_context);
 	SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -225,7 +247,6 @@ int NFUIModule::SetupGUI()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;			// Enable docking.
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
@@ -250,67 +271,8 @@ int NFUIModule::SetupGUI()
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	//IM_ASSERT(font != NULL);
-	
-	SetupColour(io);
 
 	return 0;
-}
-
-void NFUIModule::SetupColour(ImGuiIO& io)
-{
-	io.Fonts->AddFontFromFileTTF("../NFDataCfg/Fonts/Ruda-Bold.ttf", 15.0f);
-    ImGui::GetStyle().FrameRounding = 4.0f;
-    ImGui::GetStyle().GrabRounding = 4.0f;
-    
-    ImVec4* colors = ImGui::GetStyle().Colors;
-    colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
-    colors[ImGuiCol_TextDisabled] = ImVec4(0.36f, 0.42f, 0.47f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
-    colors[ImGuiCol_Border] = ImVec4(0.08f, 0.10f, 0.12f, 1.00f);
-    colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.12f, 0.20f, 0.28f, 1.00f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(0.09f, 0.12f, 0.14f, 1.00f);
-    colors[ImGuiCol_TitleBg] = ImVec4(0.09f, 0.12f, 0.14f, 0.65f);
-    colors[ImGuiCol_TitleBgActive] = ImVec4(0.08f, 0.10f, 0.12f, 1.00f);
-    colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-    colors[ImGuiCol_MenuBarBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
-    colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.39f);
-    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.18f, 0.22f, 0.25f, 1.00f);
-    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.09f, 0.21f, 0.31f, 1.00f);
-    colors[ImGuiCol_CheckMark] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
-    colors[ImGuiCol_SliderGrab] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
-    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.37f, 0.61f, 1.00f, 1.00f);
-    colors[ImGuiCol_Button] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_ButtonHovered] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
-    colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-    colors[ImGuiCol_Header] = ImVec4(0.20f, 0.25f, 0.29f, 0.55f);
-    colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-    colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-    colors[ImGuiCol_Separator] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_SeparatorHovered] = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
-    colors[ImGuiCol_SeparatorActive] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
-    colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
-    colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-    colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-    colors[ImGuiCol_Tab] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_TabHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-    colors[ImGuiCol_TabActive] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_TabUnfocused] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
-    colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-    colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-    colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-    colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-    colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-    colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
-    colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 }
 
 void NFUIModule::CloseGUI()
@@ -329,31 +291,3 @@ void NFUIModule::CloseGUI()
 	}
 }
 
-
-NF_SHARE_PTR<NFIView> NFUIModule::GetView(NFViewType viewType)
-{
-	for (auto view : mViewList)
-	{
-		if (view->viewType == viewType)
-		{
-			return view;
-		}
-	}
-
-	return nullptr;
-}
-
-const std::vector<NF_SHARE_PTR<NFIView>>& NFUIModule::GetViews()
-{
-	return mViewList;
-}	
-
-void NFUIModule::ExecuteBegin(const std::string& name, bool* visible)
-{
-	ImGui::Begin(name.c_str(), visible);
-}
-
-void NFUIModule::ExecuteEnd()
-{
-    ImGui::End();
-}

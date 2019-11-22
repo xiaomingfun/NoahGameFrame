@@ -31,7 +31,6 @@ class NFGameView : public NFIView
 {
 public:
 	NFGameView(NFIPluginManager* p, NFViewType vt);
-	virtual bool Execute();
 };
 
 #endif

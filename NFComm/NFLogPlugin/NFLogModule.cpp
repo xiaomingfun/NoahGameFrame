@@ -164,56 +164,43 @@ bool NFLogModule::Log(const NF_LOG_LEVEL nll, const char* format, ...)
     vsnprintf(szBuffer, sizeof(szBuffer) - 1, format, args);
     va_end(args);
 
-    mstrLocalStream.clear();
-
-    mstrLocalStream.append(std::to_string(mnLogCountTotal));
-    mstrLocalStream.append(" | ");
-    mstrLocalStream.append(std::to_string(pPluginManager->GetAppID()));
-    mstrLocalStream.append(" | ");
-    mstrLocalStream.append(szBuffer);
-
-    if (mLogHooker)
-    {
-        mLogHooker.get()->operator()(nll, mstrLocalStream);
-    }
-
     switch (nll)
     {
         case NFILogModule::NLL_DEBUG_NORMAL:
 			{
 				std::cout << termcolor::green;
-				LOG(DEBUG) << mstrLocalStream;
+				LOG(DEBUG) << mnLogCountTotal << " | " << pPluginManager->GetAppID()<< " | " << szBuffer;
 			}
 			break;
         case NFILogModule::NLL_INFO_NORMAL:
 			{
 				std::cout << termcolor::green;
-				LOG(INFO) << mstrLocalStream;
+				LOG(INFO) << mnLogCountTotal << " | " << pPluginManager->GetAppID() << " | " << szBuffer;
 			}	
 			break;
         case NFILogModule::NLL_WARING_NORMAL:
 			{
 				std::cout << termcolor::yellow;
-				LOG(WARNING) << mstrLocalStream;
+				LOG(WARNING) << mnLogCountTotal << " | " << pPluginManager->GetAppID() << " | " << szBuffer;
 			}
 			break;
         case NFILogModule::NLL_ERROR_NORMAL:
 			{
 				std::cout << termcolor::red;
-				LOG(ERROR) << mstrLocalStream;
+				LOG(ERROR) << mnLogCountTotal << " | " << pPluginManager->GetAppID() << " | " << szBuffer;
 				//LogStack();
 			}
 			break;
         case NFILogModule::NLL_FATAL_NORMAL:
 			{
 				std::cout << termcolor::red;
-				LOG(FATAL) << mstrLocalStream;
+				LOG(FATAL) << mnLogCountTotal << " | " << pPluginManager->GetAppID() << " | " << szBuffer;
 			}
 			break;
         default:
 			{
 				std::cout << termcolor::green;
-				LOG(INFO) << mstrLocalStream;
+				LOG(INFO) << mnLogCountTotal << " | " << pPluginManager->GetAppID() << " | " << szBuffer;
 			}
 			break;
     }
@@ -328,7 +315,7 @@ void NFLogModule::LogStack()
 	{
 		//printf("%s\n", stacktrace[i]);
         
-        Log(NLL_FATAL_NORMAL, "%s", stacktrace[i]);
+		LOG(FATAL) << stacktrace[i];
 	}
 
 	free(stacktrace);
@@ -744,9 +731,8 @@ void NFLogModule::StackTrace(/*const NF_LOG_LEVEL nll = NFILogModule::NLL_FATAL_
     for (int i = 0; i < stack_num; ++i)
     {
     	//printf("%s\n", stacktrace[i]);
-        Log(NLL_FATAL_NORMAL, "%s", stacktrace[i]);
+    	LOG(FATAL) << stacktrace[i];
     }
-    
 
     free(stacktrace);
 #else
@@ -759,8 +745,7 @@ void NFLogModule::StackTrace(/*const NF_LOG_LEVEL nll = NFILogModule::NLL_FATAL_
 	SymInitialize(process, NULL, TRUE);
 	WORD frames = CaptureStackBackTrace(0, MAX_STACK_FRAMES, pStack, NULL);
  
-    Log(NLL_FATAL_NORMAL, "stack traceback: ");
-	//LOG(FATAL) << "stack traceback: " << std::endl;
+	LOG(FATAL) << "stack traceback: " << std::endl;
 	for (WORD i = 0; i < frames; ++i) {
 		DWORD64 address = (DWORD64)(pStack[i]);
  
@@ -776,21 +761,12 @@ void NFLogModule::StackTrace(/*const NF_LOG_LEVEL nll = NFILogModule::NLL_FATAL_
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
  
 		if (SymFromAddr(process, address, &displacementSym, pSymbol)
-		 && SymGetLineFromAddr64(process, address, &displacementLine, &line))
-        {
-            Log(NLL_FATAL_NORMAL, "\t %s at %s : %d (0x%16d)", pSymbol->Name, line.FileName, line.LineNumber, pSymbol->Address);
-			//LOG(FATAL) << "\t" << pSymbol->Name << " at " << line.FileName << ":" << line.LineNumber << "(0x" << std::hex << pSymbol->Address << std::dec << ")" << std::endl;
+		 && SymGetLineFromAddr64(process, address, &displacementLine, &line)) {
+			LOG(FATAL) << "\t" << pSymbol->Name << " at " << line.FileName << ":" << line.LineNumber << "(0x" << std::hex << pSymbol->Address << std::dec << ")" << std::endl;
 		}
-		else
-        {
-            Log(NLL_FATAL_NORMAL, "\terror %d", GetLastError());
-			//LOG(FATAL) << "\terror: " << GetLastError() << std::endl;
+		else {
+			LOG(FATAL) << "\terror: " << GetLastError() << std::endl;
 		}
 	}
 #endif
-}
-
-void NFLogModule::SetHooker(LOG_HOOKER_FUNCTOR_PTR hooker)
-{
-    mLogHooker = hooker;
 }
