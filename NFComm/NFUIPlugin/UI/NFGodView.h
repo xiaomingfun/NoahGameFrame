@@ -26,6 +26,11 @@
 #define NF_GOD_VIEW_H
 
 #include "NFComm/NFPluginModule/NFIUIModule.h"
+#include "NFComm/NFPluginModule/NFIClassModule.h"
+#include "NFComm/NFPluginModule/NFIElementModule.h"
+#include "NFComm/NFPluginModule/NFISceneModule.h"
+#include "NFComm/NFPluginModule/NFIKernelModule.h"
+#include "NFComm/NFMessageDefine/NFMsgDefine.h"
 
 class NFGodView : public NFIView
 {
@@ -33,6 +38,19 @@ public:
 	NFGodView(NFIPluginManager* p, NFViewType vt);
 
 	virtual bool Execute();
+
+   virtual void SubRender();
+
+private:
+   int mnSceneID;
+   int mnGroupID;
+
+private:
+   NFIUIModule* m_pUIModule;
+   NFIClassModule* m_pClassModule;
+   NFIElementModule* m_pElementModule;
+   NFISceneModule* m_pSceneModule;
+   NFIKernelModule* m_pKernelModule;
 };
 
 #endif

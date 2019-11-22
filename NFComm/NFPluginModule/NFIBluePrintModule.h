@@ -143,7 +143,9 @@ public:
 		std::string desc;
 	};
 
-	class NFExecuter : BluePrintNodeBase
+	//developer could define different executer by needs
+	//the executer defined by developer could be listed when the developer picking one executer or designing a executer
+	class NFExecuter : public BluePrintNodeBase
 	{	
 	private:
 		NFExecuter(){}
@@ -163,8 +165,8 @@ public:
 
 		std::map<NFJudgementType, NF_SHARE_PTR<NFExecuter>> judgements;
 	};
-
-	class NFJudgement : BluePrintNodeBase
+	class NFMonitor ;
+	class NFJudgement : public BluePrintNodeBase
 	{	
 	private:
 		NFJudgement(){}
@@ -186,7 +188,7 @@ public:
 		std::map<NFJudgementType, NF_SHARE_PTR<NFExecuter>> judgements;
 	};
 
-	class NFMonitor : BluePrintNodeBase
+	class NFMonitor : public BluePrintNodeBase
 	{	
 	private:
 		NFMonitor(){}
@@ -196,7 +198,7 @@ public:
 			this->pPluginManager = p;
 		}
 
-		NF_SHARE_PTR<NFJudgement> AddJudgment(NFJudgementType judgementType, const std::string& name, const std::string& desc, onst NFDataList& arg)
+		NF_SHARE_PTR<NFJudgement> AddJudgment(NFJudgementType judgementType, const std::string& name, const std::string& desc, const NFDataList& arg)
 		{
 			
 
@@ -211,7 +213,7 @@ public:
 	//1 logic block must has at least 1 monitor, at least 1 judgement and at least 1 executer
 	//normally 1 judgement has 1 executer or more with different conditions
 	//blueprint block
-	class NFLogicBlock : BluePrintNodeBase
+	class NFLogicBlock : public BluePrintNodeBase
 	{
 	private:
 		NFLogicBlock(){}

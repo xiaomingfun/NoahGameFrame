@@ -32,7 +32,12 @@ class NFBluePrintView : public NFIView
 public:
 	NFBluePrintView(NFIPluginManager* p, NFViewType vt);
 
+	virtual bool Execute();
 
+   virtual void SubRender();
+   
+private:
+   NFIUIModule* m_pUIModule;
 };
 
 #endif
