@@ -5,11 +5,8 @@
 #unzip sudo apt-get install unzip
 
 #compile dep libraries
-rm -rf ./_Out/Debug/NFPluginLoader
-rm -rf ./_Out/Debug/*.a
-
-rm -rf ./_Out/Release/NFPluginLoader
-rm -rf ./_Out/Release/*.a
+rm -rf ./_Out/Debug
+rm -rf ./_Out/Release
 
 cd NFComm/NFMessageDefine
 ./cpp.sh

@@ -34,8 +34,6 @@ public:
 	NFSceneView(NFIPluginManager* p, NFViewType vt);
 
 	virtual bool Execute();
-
-   virtual void SubRender();
 };
 
 #endif
