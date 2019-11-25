@@ -113,9 +113,11 @@ bool NFUIModule::Execute()
 
 		for (auto view : mViewList)
 		{
-			view->ExecuteBegin();
+			ExecuteBegin(view);
+
 			view->Execute();
-			view->ExecuteEnd();
+
+			ExecuteEnd(view);
 		}
 
 		// Rendering
@@ -355,12 +357,38 @@ const std::vector<NF_SHARE_PTR<NFIView>>& NFUIModule::GetViews()
 	return mViewList;
 }	
 
-void NFUIModule::ExecuteBegin(const std::string& name, bool* visible)
+void NFUIModule::ExecuteBegin(NF_SHARE_PTR<NFIView> view)
 {
-	ImGui::Begin(name.c_str(), visible);
+	if (view->viewType == NFViewType::NONE)
+	{
+   		//imnodes::BeginNodeEditor();
+	}
+	else if (view->viewType == NFViewType::ContainerView)
+	{
+	}
+	else
+	{
+		ImGui::Begin(view->name.c_str(), &(view->visible));
+	}
 }
 
-void NFUIModule::ExecuteEnd()
+void NFUIModule::ExecuteEnd(NF_SHARE_PTR<NFIView> view)
 {
-    ImGui::End();
+	if (view->viewType == NFViewType::NONE)
+	{
+  		//imnodes::EndNodeEditor();
+	}
+	else if (view->viewType == NFViewType::ContainerView)
+	{
+	}
+	else
+	{
+
+		if (view->m_pOccupyView)
+		{
+			view->m_pOccupyView->SubRender();
+		}
+
+    	ImGui::End();
+	}
 }

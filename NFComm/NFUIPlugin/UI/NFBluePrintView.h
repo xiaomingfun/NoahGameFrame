@@ -26,46 +26,23 @@
 #define NF_BLUE_PRINT_VIEW_H
 
 #include "NFComm/NFPluginModule/NFIUIModule.h"
-
-# include "imgui_node_editor.h"
-# define IMGUI_DEFINE_MATH_OPERATORS
-# include "ImGui/imgui_internal.h"
-namespace ed = ax::NodeEditor;
-
-// Struct to hold basic information about connection between
-// pins. Note that connection (aka. link) has its own ID.
-// This is useful later with dealing with selections, deletion
-// or other operations.
-struct LinkInfo
-{
-	ed::LinkId Id;
-	ed::PinId  InputId;
-	ed::PinId  OutputId;
-};
+#include "NFComm/NFPluginModule/NFIBluePrintModule.h"
+#include "NFNodeView.h"
 
 class NFBluePrintView : public NFIView
 {
 public:
 	NFBluePrintView(NFIPluginManager* p, NFViewType vt);
+	virtual ~NFBluePrintView();
 
-	virtual void Begin();
 	virtual bool Execute();
-	virtual void End();
 
-	virtual void SubRender();
-
-	ed::EditorContext* g_Context = nullptr;    // Editor context, required to trace a editor state.
-	bool                 g_FirstFrame = true;    // Flag set for first frame only, some action need to be executed once.
-	ImVector<LinkInfo>   g_Links;                // List of live links. It is dynamic unless you want to create read-only view over nodes.
-	int                  g_NextLinkId = 100;     // Counter to help generate link ids. In real application this will probably based on pointer to user data structure.
- 
-	void Application_Frame();
-	void ImGuiEx_BeginColumn();
-	void ImGuiEx_EndColumn();
-	void ImGuiEx_NextColumn();
-
+   virtual void SubRender();
+   
 private:
-	NFIUIModule* m_pUIModule;
+	NFNodeView* m_pNodeView;
+   NFIBluePrintModule* m_pBluePrintModule;
+   NFIUIModule* m_pUIModule;
 };
 
 #endif

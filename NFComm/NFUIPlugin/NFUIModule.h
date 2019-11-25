@@ -76,8 +76,7 @@ public:
 
 	virtual const std::vector<NF_SHARE_PTR<NFIView>>& GetViews();
 
-	virtual void ExecuteBegin(const std::string& name, bool* visible);
-	virtual void ExecuteEnd();
+
  
 
 protected:
@@ -85,6 +84,8 @@ protected:
 	void SetupColour(ImGuiIO& io);
 	void CloseGUI();
 
+	void ExecuteBegin(NF_SHARE_PTR<NFIView> view);
+	void ExecuteEnd(NF_SHARE_PTR<NFIView> view);
 private:
 
 	// Our state
