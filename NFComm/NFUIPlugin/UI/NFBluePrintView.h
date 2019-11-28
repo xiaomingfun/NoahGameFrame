@@ -38,11 +38,32 @@ public:
 	virtual bool Execute();
 
    virtual void SubRender();
+
+   void TryToCreateBluePrintBlock();
+
+private:
+   void SetCurrentLogicBlock(NF_SHARE_PTR<NFIBluePrintModule::NFLogicBlock> logicBlock);
+
+   void SubMonitorRender(NF_SHARE_PTR<NFIBluePrintModule::NFMonitor> monitor);
+   void SubJudgementRender(NF_SHARE_PTR<NFIBluePrintModule::NFJudgement> judgement);
+   void SubExecuterRender(NF_SHARE_PTR<NFIBluePrintModule::NFExecuter> executer);
+
+   void CreateLogicBlockWindow();
    
+private:
+   NF_SHARE_PTR<NFIBluePrintModule::NFLogicBlock> mCurrentLogicBlock;
+   NF_SHARE_PTR<NFIBluePrintModule::NFMonitor> mCurrentMonitor;
+   NF_SHARE_PTR<NFIBluePrintModule::NFExecuter> mCurrentExecuter;
+   NF_SHARE_PTR<NFIBluePrintModule::NFJudgement> mCurrentJudgement;
+
+private:
+   bool bCreatingLogicBlock = false;
+
 private:
 	NFNodeView* m_pNodeView;
    NFIBluePrintModule* m_pBluePrintModule;
    NFIUIModule* m_pUIModule;
+   NFIKernelModule* m_pKernelModule;
 };
 
 #endif

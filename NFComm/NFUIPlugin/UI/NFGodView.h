@@ -31,28 +31,33 @@
 #include "NFComm/NFPluginModule/NFISceneModule.h"
 #include "NFComm/NFPluginModule/NFIKernelModule.h"
 #include "NFComm/NFMessageDefine/NFMsgDefine.h"
+#include "NFNodeView.h"
 
 class NFGodView : public NFIView
 {
 public:
 	NFGodView(NFIPluginManager* p, NFViewType vt);
-
+   ~NFGodView();
+   
 	virtual bool Execute();
 
    virtual void SubRender();
 
    NFGUID GetCurrentObjectID();
+   void SetCurrentObjectID(const NFGUID& id);
 
 private:
    void RenderScene(const int sceneID);
    void RenderScene(const int sceneID, const int groupID);
 
+   void RenderSceneObjectNode(const int sceneID, const int groupID);
 private:
    int mnSceneID = -1;
    int mnGroupID = -1;
 
    NFGUID mCurrentObjectID;
    
+   NFNodeView* m_pNodeView;
 private:
    NFIUIModule* m_pUIModule;
    NFIClassModule* m_pClassModule;
