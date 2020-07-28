@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -49,7 +49,7 @@
 #pragma comment( lib, "SDL2d.lib" )
 #else
 #pragma comment( lib, "libprotobuf.lib" )
-//#pragma comment( lib, "SDL2.lib" )
+#pragma comment( lib, "SDL2.lib" )
 #endif
 
 #pragma comment( lib, "NFCore.lib" )
@@ -72,7 +72,7 @@
 #pragma comment( lib, "NFNoSqlPlugin.lib" )
 #pragma comment( lib, "NFSecurityPlugin.lib" )
 #pragma comment( lib, "NFTestPlugin.lib" )
-#pragma comment( lib, "NFUIPlugin.lib" )
+#pragma comment( lib, "NFRenderPlugin.lib" )
 #pragma comment( lib, "NFBluePrintPlugin.lib" )
 
 #pragma comment( lib, "NFDBLogicPlugin.lib" )
@@ -96,9 +96,20 @@
 #pragma comment( lib, "NFProxyServerNet_ClientPlugin.lib" )
 #pragma comment( lib, "NFProxyServerNet_ServerPlugin.lib" )
 
-#pragma comment( lib, "NFWorldLogicPlugin.lib" )
 #pragma comment( lib, "NFWorldNet_ClientPlugin.lib" )
 #pragma comment( lib, "NFWorldNet_ServerPlugin.lib" )
+
+#pragma comment( lib, "NFChatPlugin.lib" )
+#pragma comment( lib, "NFInventoryPlugin.lib" )
+#pragma comment( lib, "NFConsumeManagerPlugin.lib" )
+
+#pragma comment( lib, "Tutorial1.lib" )
+#pragma comment( lib, "Tutorial2.lib" )
+#pragma comment( lib, "Tutorial3.lib" )
+#pragma comment( lib, "Tutorial4.lib" )
+#pragma comment( lib, "Tutorial5.lib" )
+#pragma comment( lib, "Tutorial6.lib" )
+#pragma comment( lib, "Tutorial7.lib" )
 
 #endif
 
@@ -135,8 +146,15 @@
 #include "NFComm/NFNoSqlPlugin/NFNoSqlPlugin.h"
 #include "NFComm/NFSecurityPlugin/NFSecurityPlugin.h"
 #include "NFComm/NFTestPlugin/NFTestPlugin.h"
-#include "NFComm/NFUIPlugin/NFUIPlugin.h"
+
+#include "NFExamples/NFChatPlugin/NFChatPlugin.h"
+#include "NFExamples/NFConsumeManagerPlugin/NFConsumeManagerPlugin.h"
+#include "NFExamples/NFInventoryPlugin/NFInventoryPlugin.h"
+
+#if NF_PLATFORM != NF_PLATFORM_LINUX
+#include "NFComm/NFRenderPlugin/NFRenderPlugin.h"
 #include "NFComm/NFBluePrintPlugin/NFBluePrintPlugin.h"
+#endif
 
 //DB
 #include "NFServer/NFDBLogicPlugin/NFDBLogicPlugin.h"
@@ -159,17 +177,11 @@
 #include "NFServer/NFProxyServerNet_ClientPlugin/NFProxyServerNet_ClientPlugin.h"
 #include "NFServer/NFProxyServerNet_ServerPlugin/NFProxyServerNet_ServerPlugin.h"
 //WORLD
-#include "NFServer/NFWorldLogicPlugin/NFWorldLogicPlugin.h"
 #include "NFServer/NFWorldNet_ClientPlugin/NFWorldNet_ClientPlugin.h"
 #include "NFServer/NFWorldNet_ServerPlugin/NFWorldNet_ServerPlugin.h"
 
 
 #endif
-
-void CoroutineExecute(void* arg)
-{
-	//NFPluginManager::Instance()->Execute();
-}
 
 NFPluginManager::NFPluginManager() : NFIPluginManager()
 {
@@ -205,8 +217,6 @@ NFPluginManager::~NFPluginManager()
 bool NFPluginManager::LoadPlugin()
 {
 	std::cout << "----LoadPlugin----" << std::endl;
-
-	LoadPluginConfig();
 
 #ifndef NF_DYNAMIC_PLUGIN
 	LoadStaticPlugin();
@@ -251,10 +261,9 @@ inline bool NFPluginManager::Init()
 	for (; itInstance != mPluginInstanceMap.end(); itInstance++)
 	{
 		SetCurrentPlugin(itInstance->second);
+		std::cout << itInstance->first << std::endl;
 		itInstance->second->Init();
 	}
-
-   mxCoroutineManager.Init(CoroutineExecute);
 
 	return true;
 }
@@ -315,8 +324,15 @@ bool NFPluginManager::LoadStaticPlugin()
 	CREATE_PLUGIN(this, NFNoSqlPlugin)
 	CREATE_PLUGIN(this, NFSecurityPlugin)
 	CREATE_PLUGIN(this, NFTestPlugin)
-	CREATE_PLUGIN(this, NFUIPlugin)
+
+	CREATE_PLUGIN(this, NFChatPlugin)
+	CREATE_PLUGIN(this, NFConsumeManagerPlugin)
+	CREATE_PLUGIN(this, NFInventoryPlugin)
+
+#if NF_PLATFORM == NF_PLATFORM_APPLE || NF_PLATFORM == NF_PLATFORM_WIN
+	CREATE_PLUGIN(this, NFRenderPlugin)
 	CREATE_PLUGIN(this, NFBluePrintPlugin)
+#endif
 		
 //DB
 	CREATE_PLUGIN(this, NFDBLogicPlugin)
@@ -344,7 +360,6 @@ bool NFPluginManager::LoadStaticPlugin()
 	CREATE_PLUGIN(this, NFProxyServerNet_ServerPlugin)
 
 //WORLD
-	CREATE_PLUGIN(this, NFWorldLogicPlugin)
 	CREATE_PLUGIN(this, NFWorldNet_ClientPlugin)
 	CREATE_PLUGIN(this, NFWorldNet_ServerPlugin)
 
@@ -369,11 +384,16 @@ bool NFPluginManager::CheckStaticPlugin()
 			if (tempPluginName == strPluginName)
 			{
 				bFind = true;
+				break;
 			}
 		}
 
 		if (!bFind)
 		{
+			it->second->Uninstall();
+			delete it->second;
+			it->second = NULL;
+
 			it = mPluginInstanceMap.erase(it);  
 		}
 		else
@@ -385,40 +405,6 @@ bool NFPluginManager::CheckStaticPlugin()
 	for (auto it = mPluginInstanceMap.begin(); it != mPluginInstanceMap.end(); ++it)
 	{
 		std::cout << it->first << std::endl;
-	}
-
-	std::cout << "-------------" << std::endl;
-
-	//////module
-	for (auto it = mModuleInstanceMap.begin(); it != mModuleInstanceMap.end();)
-	{
-		bool bFind = false;
-		const std::string& strModuleName = it->first;
-
-		for (int i = 0; i < mStaticPlugin.size(); ++i)
-		{
-			const std::string& strPluginName = mStaticPlugin[i];
-				
-			NFIPlugin* pPlugin = this->FindPlugin(strPluginName);
-			if (pPlugin)
-			{
-				NFIModule* pModule = pPlugin->GetElement(strModuleName);
-				if (pModule)
-				{
-					bFind = true;
-					break;
-				}
-			}
-		}
-
-		if (!bFind)
-		{
-			it = mModuleInstanceMap.erase(it);  
-		}
-		else
-		{
-			it++;
-		}
 	}
 
 	std::cout << "-------------" << std::endl;
@@ -480,15 +466,9 @@ bool NFPluginManager::ReLoadPlugin(const std::string & strPluginDLLName)
 	}
 	//1
 	NFIPlugin* pPlugin = itInstance->second;
-	NFIModule* pModule = pPlugin->First();
-	while (pModule)
-	{
-		pModule->BeforeShut();
-		pModule->Shut();
-		pModule->Finalize();
-
-		pModule = pPlugin->Next();
-	}
+	pPlugin->BeforeShut();
+	pPlugin->Shut();
+	pPlugin->Finalize();
 
 	//2
 	PluginLibMap::iterator it = mPluginLibMap.find(strPluginDLLName);
@@ -574,10 +554,9 @@ bool NFPluginManager::Execute()
 
     bool bRet = true;
 
-    PluginInstanceMap::iterator it = mPluginInstanceMap.begin();
-    for (; it != mPluginInstanceMap.end(); ++it)
+    for (auto& xPair : mNeedExecuteModuleVec)
     {
-        bool tembRet = it->second->Execute();
+        bool tembRet = xPair.second->Execute();
         bRet = bRet && tembRet;
     }
 
@@ -683,7 +662,7 @@ NFIPlugin * NFPluginManager::GetCurrentPlugin()
 	return mCurrentPlugin;
 }
 
-NFIModule * NFPluginManager::GetCurrenModule()
+NFIModule * NFPluginManager::GetCurrentModule()
 {
 	return mCurrenModule;
 }
@@ -693,7 +672,7 @@ void NFPluginManager::SetCurrentPlugin(NFIPlugin * pPlugin)
 	 mCurrentPlugin = pPlugin;
 }
 
-void NFPluginManager::SetCurrenModule(NFIModule * pModule)
+void NFPluginManager::SetCurrentModule(NFIModule * pModule)
 {
 	mCurrenModule = pModule;
 }
@@ -707,7 +686,7 @@ bool NFPluginManager::GetFileContent(const std::string &strFileName, std::string
 {
 	if (mGetFileContentFunctor)
 	{
-		return mGetFileContentFunctor(strFileName, strContent);
+		return mGetFileContentFunctor(this, strFileName, strContent);
 	}
 
 	FILE *fp = fopen(strFileName.c_str(), "rb");
@@ -731,6 +710,9 @@ void NFPluginManager::AddModule(const std::string& strModuleName, NFIModule* pMo
     if (!FindModule(strModuleName))
     {
         mModuleInstanceMap.insert(ModuleInstanceMap::value_type(strModuleName, pModule));
+
+        if (pModule->m_bIsExecute)
+            mNeedExecuteModuleVec.push_back(std::make_pair(strModuleName, pModule));
     }
 }
 
@@ -748,32 +730,34 @@ void NFPluginManager::RemoveModule(const std::string& strModuleName)
     if (it != mModuleInstanceMap.end())
     {
         mModuleInstanceMap.erase(it);
+
+        auto iter = std::find_if(mNeedExecuteModuleVec.begin(),
+            mNeedExecuteModuleVec.end(),
+            [&strModuleName](const std::pair<std::string, NFIModule*>& xPair) ->bool{
+            return xPair.first == strModuleName;
+        });
+        
+        if(iter != mNeedExecuteModuleVec.end())
+            mNeedExecuteModuleVec.erase(iter);
     }
 }
 
 
 NFIModule* NFPluginManager::FindModule(const std::string& strModuleName)
 {
-	std::string strSubModuleName = strModuleName;
+	std::string strSubModuleName;
 
-#if NF_PLATFORM == NF_PLATFORM_WIN
-	std::size_t position = strSubModuleName.find(" ");
-	if (string::npos != position)
+	string::size_type position = strModuleName.find("NF");
+	if (position != string::npos)
 	{
-		strSubModuleName = strSubModuleName.substr(position + 1, strSubModuleName.length());
+		strSubModuleName = strModuleName.substr(position, strModuleName.length() - position);
 	}
-#else
-	for (int i = 0; i < strSubModuleName.length(); i++)
+
+	if (strSubModuleName.empty())
 	{
-		std::string s = strSubModuleName.substr(0, i + 1);
-		int n = atof(s.c_str());
-		if (strSubModuleName.length() == i + 1 + n)
-		{
-			strSubModuleName = strSubModuleName.substr(i + 1, strSubModuleName.length());
-			break;
-		}
+		std::cout << "" << std::endl;
+		return NULL;
 	}
-#endif
 
 	ModuleInstanceMap::iterator it = mModuleInstanceMap.find(strSubModuleName);
 	if (it != mModuleInstanceMap.end())
@@ -781,9 +765,9 @@ NFIModule* NFPluginManager::FindModule(const std::string& strModuleName)
 		return it->second;
 	}
 	
-	if (this->GetCurrenModule())
+	if (this->GetCurrentModule())
 	{
-		std::cout << this->GetCurrenModule()->strName << " want to find module: " << strModuleName << " but got null_ptr!!!" << std::endl;
+		std::cout << this->GetCurrentModule()->strName << " want to find module: " << strModuleName << " but got null_ptr!!!" << std::endl;
 	}
 
     return NULL;
@@ -791,26 +775,19 @@ NFIModule* NFPluginManager::FindModule(const std::string& strModuleName)
 
 NFIModule* NFPluginManager::FindTestModule(const std::string& strModuleName)
 {
-	std::string strSubModuleName = strModuleName;
+	std::string strSubModuleName;
 
-#if NF_PLATFORM == NF_PLATFORM_WIN
-	std::size_t position = strSubModuleName.find(" ");
-	if (string::npos != position)
+	string::size_type position = strModuleName.find("NF");
+	if (position != string::npos)
 	{
-		strSubModuleName = strSubModuleName.substr(position + 1, strSubModuleName.length());
+		strSubModuleName = strModuleName.substr(position, strModuleName.length() - position);
 	}
-#else
-	for (int i = 0; i < strSubModuleName.length(); i++)
+
+	if (strSubModuleName.empty())
 	{
-		std::string s = strSubModuleName.substr(0, i + 1);
-		int n = atof(s.c_str());
-		if (strSubModuleName.length() == i + 1 + n)
-		{
-			strSubModuleName = strSubModuleName.substr(i + 1, strSubModuleName.length());
-			break;
-		}
+		std::cout << "" << std::endl;
+		return NULL;
 	}
-#endif
 
     TestModuleInstanceMap::iterator it = mTestModuleInstanceMap.find(strSubModuleName);
 	if (it != mTestModuleInstanceMap.end())
@@ -1007,17 +984,52 @@ bool NFPluginManager::UnLoadStaticPlugin(const std::string & strPluginDLLName)
 	return false;
 }
 
-void NFPluginManager::ExecuteCoScheduler()
+void NFPluginManager::AddFileReplaceContent(const std::string& fileName, const std::string& content, const std::string& newValue)
 {
-    mxCoroutineManager.ScheduleJob();
+	auto it = mReplaceContent.find(fileName);
+	if (it == mReplaceContent.end())
+	{
+		std::vector<NFReplaceContent> v;
+		v.push_back(NFReplaceContent(content, newValue));
+
+		mReplaceContent.insert(std::make_pair(fileName, v));
+	}
+	else
+	{
+		it->second.push_back(NFReplaceContent(content, newValue));
+	}
 }
 
-void NFPluginManager::YieldCo(const int64_t nSecond)
+std::vector<NFReplaceContent> NFPluginManager::GetFileReplaceContents(const std::string& fileName)
 {
-	mxCoroutineManager.YieldCo(nSecond);
+	auto it = mReplaceContent.find(fileName);
+	if (it != mReplaceContent.end())
+	{
+		return it->second;
+	}
+
+	return std::vector<NFReplaceContent>();
 }
 
-void NFPluginManager::YieldCo()
+std::list<NFIModule *> NFPluginManager::TestModules()
 {
-   mxCoroutineManager.YieldCo();
+	std::list<NFIModule*> xModules;
+
+	TestModuleInstanceMap::iterator itCheckInstance = mTestModuleInstanceMap.begin();
+	for (; itCheckInstance != mTestModuleInstanceMap.end(); itCheckInstance++)
+	{
+		xModules.push_back(itCheckInstance->second);
+	}
+
+	return xModules;
+}
+
+int NFPluginManager::GetAppCPUCount() const
+{
+	return mnCPUCount;
+}
+
+void NFPluginManager::SetAppCPUCount(const int count)
+{
+	mnCPUCount = count;
 }

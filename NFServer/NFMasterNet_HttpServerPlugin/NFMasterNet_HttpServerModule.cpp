@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -77,7 +77,7 @@ bool NFMasterNet_HttpServerModule::AfterInit()
 
 bool NFMasterNet_HttpServerModule::Execute()
 {
-    m_pHttpNetModule->Execute();
+    //m_pHttpNetModule->Execute();
 	return true;
 }
 

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -59,7 +59,21 @@
 #endif
 
 #endif
+#if NF_PLATFORM == NF_PLATFORM_WIN
 
+#pragma comment( lib, "DbgHelp" )
+
+bool ApplicationCtrlHandler(DWORD fdwctrltype);
+
+void CreateDumpFile(const std::string& strDumpFilePathName, EXCEPTION_POINTERS* pException);
+
+long ApplicationCrashHandler(EXCEPTION_POINTERS* pException);
+
+#else
+
+void NFCrashHandler(int sig);
+
+#endif
 #if NF_PLATFORM != NF_PLATFORM_WIN
 class NFExceptFrame
 {
@@ -172,14 +186,14 @@ NFException::ExceptStack().flag = sigsetjmp(NFException::ExceptStack().env,1);\
 if(!NFException::ExceptStack().isDef()) \
 { \
 signal(SIGSEGV, NFException::CrashHandler); \
-printf("start use TRY\n");
+//printf("start use TRY\n");
 #define NF_CRASH_END_TRY \
 }\
 else\
 {\
 NFException::ExceptStack().clear();\
 }\
-printf("stop use TRY\n");
+//printf("stop use TRY\n");
 
 #endif
 #endif

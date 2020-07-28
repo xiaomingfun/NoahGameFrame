@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -28,6 +28,7 @@
 
 NFNetClientModule::NFNetClientModule(NFIPluginManager* p)
 {
+    m_bIsExecute = true;
     mnBufferSize = 0;
     pPluginManager = p;
 
@@ -409,7 +410,7 @@ void NFNetClientModule::SendToServerByPB(const int nServerID, const uint16_t nMs
 	}
 }
 
-void NFNetClientModule::SendToAllServerByPB(const uint16_t nMsgID, const google::protobuf::Message& xData)
+void NFNetClientModule::SendToAllServerByPB(const uint16_t nMsgID, const google::protobuf::Message& xData, const NFGUID id)
 {
     NF_SHARE_PTR<ConnectData> pServer = mxServerMap.First();
     while (pServer)
@@ -417,7 +418,7 @@ void NFNetClientModule::SendToAllServerByPB(const uint16_t nMsgID, const google:
         NF_SHARE_PTR<NFINetModule> pNetModule = pServer->mxNetModule;
         if (pNetModule)
         {
-			if (!pNetModule->SendMsgPB(nMsgID, xData, 0))
+			if (!pNetModule->SendMsgPB(nMsgID, xData, 0, id))
 			{
 				std::ostringstream stream;
 				stream << " SendMsgPB failed " << pServer->nGameID;
@@ -430,8 +431,7 @@ void NFNetClientModule::SendToAllServerByPB(const uint16_t nMsgID, const google:
     }
 }
 
-void NFNetClientModule::SendToAllServerByPB(const NF_SERVER_TYPES eType, const uint16_t nMsgID,
-                                             const google::protobuf::Message& xData)
+void NFNetClientModule::SendToAllServerByPB(const NF_SERVER_TYPES eType, const uint16_t nMsgID, const google::protobuf::Message& xData, const NFGUID id)
 {
     NF_SHARE_PTR<ConnectData> pServer = mxServerMap.First();
     while (pServer)
@@ -439,7 +439,7 @@ void NFNetClientModule::SendToAllServerByPB(const NF_SERVER_TYPES eType, const u
         NF_SHARE_PTR<NFINetModule> pNetModule = pServer->mxNetModule;
         if (pNetModule && eType == pServer->eServerType && pServer->eState == ConnectDataState::NORMAL)
         {
-            if (!pNetModule->SendMsgPB(nMsgID, xData, 0))
+            if (!pNetModule->SendMsgPB(nMsgID, xData, 0, id))
 			{
 				std::ostringstream stream;
 				stream << " SendMsgPB failed " << pServer->nGameID;
@@ -714,28 +714,33 @@ void NFNetClientModule::ProcessExecute()
 
 void NFNetClientModule::LogServerInfo()
 {
-	m_pLogModule->LogInfo("This is a client, begin to print Server Info-------------------");
+	bool error = false;
+	std::ostringstream stream;
+	stream << "This is a client, begin to print Server Info-------------------" << std::endl;
 
     ConnectData* pServerData = mxServerMap.FirstNude();
     while (nullptr != pServerData)
     {
-        std::ostringstream stream;
-        stream << "Type: " << pServerData->eServerType << " Server ID: " << pServerData->nGameID << " State: "
-               << pServerData->eState << " IP: " << pServerData->strIP << " Port: " << pServerData->nPort;
+        stream << "Type: " << pServerData->eServerType << " Server ID: " << pServerData->nGameID << " State: " << pServerData->eState << " IP: " << pServerData->strIP << " Port: " << pServerData->nPort;
 
-		if (pServerData->eState == ConnectDataState::NORMAL)
+		if (pServerData->eState != ConnectDataState::NORMAL)
 		{
-			m_pLogModule->LogInfo(stream.str());
-		}
-		else
-		{
-			m_pLogModule->LogError(stream.str());
+			error = true;
 		}
 
         pServerData = mxServerMap.NextNude();
     }
 
-	m_pLogModule->LogInfo("This is a client, end to print Server Info---------------------");
+	stream << "This is a client, end to print Server Info---------------------" << std::endl;
+
+    if (error)
+	{
+		m_pLogModule->LogError(stream.str());
+	}
+	else
+	{
+		m_pLogModule->LogInfo(stream.str());
+	}
 }
 
 void NFNetClientModule::KeepState(NF_SHARE_PTR<ConnectData> pServerData)

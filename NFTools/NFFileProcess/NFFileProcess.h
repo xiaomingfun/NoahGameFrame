@@ -3,12 +3,13 @@
 #include "Dependencies/common/lexical_cast.hpp"
 #include "MiniExcelReader.h"
 #include <map>
+#include <list>
 
 
-class NFlassProperty
+class NFClassProperty
 {
 public:
-	NFlassProperty()
+	NFClassProperty()
 	{
 	}
 
@@ -17,10 +18,10 @@ public:
 	std::string type;
 };
 
-class NFlassRecord
+class NFClassRecord
 {
 public:
-	NFlassRecord()
+	NFClassRecord()
 	{
 	}
 
@@ -36,21 +37,21 @@ public:
 	std::map<std::string, RecordColDesc*> colList;//tag, desc
 };
 
-class NFlassStruct
+class NFClassStruct
 {
 public:
-	NFlassStruct()
+	NFClassStruct()
 	{
 	}
 	std::string strClassName;
-	std::map<std::string, NFlassProperty*> xPropertyList;//key, desc
-	std::map<std::string, NFlassRecord*> xRecordList;//name, desc
+	std::map<std::string, NFClassProperty*> xPropertyList;//key, desc
+	std::map<std::string, NFClassRecord*> xRecordList;//name, desc
 };
 
-class NFlassElement
+class NFClassElement
 {
 public:
-	NFlassElement()
+	NFClassElement()
 	{
 	}
 
@@ -66,8 +67,14 @@ public:
 class ClassData
 {
 public:
-	NFlassStruct xStructData;
-	NFlassElement xIniData;
+	NFClassStruct xStructData;
+	NFClassElement xIniData;
+	bool beIncluded = false;
+	bool bePartialed = false;
+	std::string filePath;
+	std::string fileFolder;
+	std::list<std::string> includes;
+	std::list<std::string> parts;
 };
 
 class NFFileProcess
@@ -83,15 +90,20 @@ public:
 
 private:
 	bool LoadDataFromExcel(const std::string& strFile, const std::string& strFileName);
+	bool LoadIncludeExcel(ClassData* pClassData, const std::string& strFile, const std::string& strFileName);
+
 	bool LoadDataFromExcel(MiniExcelReader::Sheet& sheet, ClassData* pClassData);
 
 	bool LoadIniData(MiniExcelReader::Sheet& sheet, ClassData* pClassData);
 	bool LoadDataAndProcessProperty(MiniExcelReader::Sheet& sheet, ClassData* pClassData);
 	bool LoadDataAndProcessComponent(MiniExcelReader::Sheet& sheet, ClassData* pClassData);
 	bool LoadDataAndProcessRecord(MiniExcelReader::Sheet& sheet, ClassData* pClassData);
+	bool LoadDataAndProcessIncludes(MiniExcelReader::Sheet& sheet, ClassData* pClassData);
 
 	bool SaveForCPP();
 	bool SaveForCS();
+	bool SaveForTS();
+
 	bool SaveForJAVA();
 	bool SaveForPB();
 	bool SaveForSQL();
@@ -102,7 +114,12 @@ private:
 	bool SaveForLogicClass();
 
 
+	std::string GetFileNameByPath(const std::string& filePath);
+	std::string GetFileNameExtByPath(const std::string& filePath);
+
 	std::vector<std::string> GetFileListInFolder(std::string folderPath, int depth);
+	std::vector<std::string> GetFolderListInFolder(std::string folderPath);
+
 	void StringReplace(std::string &strBig, const std::string &strsrc, const std::string &strdst);
 
 private:
@@ -123,6 +140,6 @@ private:
 	std::string strCPPFile = "../proto/NFProtocolDefine.cpp";
 	std::string strJavaFile = "../proto/NFProtocolDefine.java";
 	std::string strCSFile = "../proto/NFProtocolDefine.cs";
-
+	std::string strTSFile = "../proto/NFProtocolDefine.ts";		
 	std::map<std::string, ClassData*> mxClassData;
 };

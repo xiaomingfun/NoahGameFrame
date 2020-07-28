@@ -28,16 +28,18 @@ fi
 sysOS=`uname -s`
 
 if [ $sysOS == "Darwin" ];then
-    brew install gcc6
+    brew install gcc@7
 elif [ $sysOS == "Linux" ];then
     if [ $DISTRO == "Debian" ] || [ $DISTRO == "Ubuntu" ] || [ $DISTRO == "Raspbian" ]; then
-        sudo apt-get install gcc6
+        sudo apt-get install g++-7
         sudo apt-get install libtool
         sudo apt-get install libstdc++-static
         sudo apt-get install libreadline6-dev 
         sudo apt-get install libncurses5-dev
     else
-        sudo yum -y install gcc6
+        sudo yum -y install centos-release-scl
+		sudo yum -y install devtoolset-7
+		sudo scl enable devtoolset-7 bash 
         sudo yum -y install libtool
         sudo yum -y install readline-devel
         sudo yum -y install ncurses-devel
@@ -46,41 +48,16 @@ elif [ $sysOS == "Linux" ];then
 
 fi
 
+mkdir lib
+mkdir ./lib/Release/
+mkdir ./lib/Debug/
+
 git submodule update --init --recursive
 
-rm -rf vcpkg
+chmod 777 *.sh
 
-git clone https://github.com/Microsoft/vcpkg.git
-
-cd vcpkg
-
-./bootstrap-vcpkg.sh
-
-if [ $sysOS == "Darwin" ];then
-
-    ./vcpkg install libevent:x64-osx
-    ./vcpkg install protobuf:x64-osx
-    ./vcpkg install lua:x64-osx
-    ./vcpkg install sdl2:x64-osx
-    ./vcpkg install gtest:x64-osx
-    ./vcpkg install imgui:x64-osx
-    ./vcpkg install hiredis:x64-osx
-    ./vcpkg install opengl:x64-osx
-
-elif [ $sysOS == "Linux" ];then
-    ./vcpkg install libevent:x64-linux
-    ./vcpkg install protobuf:x64-linux
-    ./vcpkg install lua:x64-linux
-    ./vcpkg install sdl2:x64-linux
-    ./vcpkg install gtest:x64-linux
-    ./vcpkg install imgui:x64-linux
-    ./vcpkg install hiredis:x64-linux
-
-
-fi
-
-
-cd ..
+./build_hiredis.sh
+./build_vcpkg.sh
 
 if [ $sysOS == "Darwin" ];then
     cp -r -f ./vcpkg/installed/x64-osx/lib/* ./lib/Release/
@@ -94,7 +71,3 @@ elif [ $sysOS == "Linux" ];then
 
     cp -r -f ./vcpkg/installed/x64-linux/tools/protobuf/* ../NFComm/NFMessageDefine/
 fi
-
-cd ..
-
-./build_hiredis.sh

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -27,8 +27,9 @@
 
 NFNetModule::NFNetModule(NFIPluginManager* p)
 {
+    m_bIsExecute = true;
     pPluginManager = p;
-
+    
     mnBufferSize = 0;
     nLastTime = GetPluginManager()->GetNowTime();
     m_pNet = NULL;
@@ -387,7 +388,7 @@ NFINet* NFNetModule::GetNet()
 
 void NFNetModule::OnReceiveNetPack(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)
 {
-	m_pLogModule->LogInfo("OnReceiveNetPack " + std::to_string(nMsgID), __FUNCTION__, __LINE__);
+	m_pLogModule->LogInfo(pPluginManager->GetAppName() + std::to_string(pPluginManager->GetAppID()) + " OnReceiveNetPack " + std::to_string(nMsgID), __FUNCTION__, __LINE__);
 
 	NFPerformance performance;
 
@@ -468,6 +469,6 @@ void NFNetModule::KeepAlive()
     NFMsg::ServerHeartBeat xMsg;
     xMsg.set_count(0);
 
-    SendMsgPB(NFMsg::EGameMsgID::EGMI_STS_HEART_BEAT, xMsg, 0);
+    SendMsgPB(NFMsg::EGameMsgID::STS_HEART_BEAT, xMsg, 0);
 
 }

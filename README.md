@@ -1,5 +1,6 @@
 # NoahGameFrame
 
+
 - develop
 [![Build Status](https://travis-ci.org/ketoo/NoahGameFrame.svg?branch=develop)](https://travis-ci.org/ketoo/NoahGameFrame)
 - master
@@ -8,6 +9,11 @@
 [![Join the chat at https://gitter.im/ketoo/NoahGameFrame](https://badges.gitter.im/ketoo/NoahGameFrame.svg)](https://gitter.im/ketoo/NoahGameFrame?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 #####QQ群：330241037 [![NF开源服务器引擎2群](https://pub.idqqimg.com/wpa/images/group.png)](https://shang.qq.com/wpa/qunwpa?idkey=17ce92a5aacdec7b1c5ef0ff99bc84ca39c927fbd4ec7a3a83449e96afa63899)
+
+## Tutorial && Documents
+
+https://github.com/ketoo/NoahGameFrame/wiki
+
 
 ## What is NoahGameFrame?
 
@@ -28,9 +34,6 @@ NoahGameFrame (NF) is a lightweight, fast, scalable, distributed plugin framewor
 
 https://github.com/ketoo/NoahGameFrame/wiki
 
-### Client (Unity3D && Cocos2d)
-[Client](https://github.com/ketoo/NFClient)
-
 ## Architecture
 
 ### App Architecture:
@@ -47,17 +50,11 @@ or
 
 svn checkout https://github.com/ketoo/NoahGameFrame
 
-## MidWare
-The projects in midware repo are usefull to develop a business game.
-
-## Game Example
-Thie repo show people how to use NF and NF's MidWare as submodule.
-
 
 ## Dependencies
 
-- libevent 2.0.22
-- easylogging++ 9.80
+- libevent
+- easylogging++
 - google protobuf
 - hiredis
 - ajson
@@ -67,44 +64,53 @@ Thie repo show people how to use NF and NF's MidWare as submodule.
 - navigation
 - lua
 
+## Tutorial && Documents
+
+https://github.com/ketoo/NoahGameFrame/wiki
+
 ## IF YOU CAN NOT BUILD THE DEPENDENCIES THEN PLEASE RUN THE CMDS BELOW TO SET UP THE ENVIRONMENT:
 
-* sudo apt-get g++
-* sudo apt-get cmake
+* sudo apt-get install g++
+* sudo apt-get install cmake
 * sudo apt-get install automake
 * sudo apt-get install zip unzip
 
 ## Supported Compilers
 
-* GCC >= 4.8 (**Tested in Ubuntu 15.04**)
-* MSVC >= VS2017 (**Tested in Win7/10**)
+* GCC >= 7 (**Tested on Ubuntu 16.04**)
+* MSVC >= VS2019 (**Tested on Win10**)
 
 ## Build and Install
-### MSVC >= 2015
+### FOR WINDOWS, MSVC >= 2019
 
 1. Git pull all source
-2. Open the solution: **NoahFrame.sln**, build FileProcessTool project
-3. Run **GenerateConfigXML.bat** to generate configuration files
-4. Run the script file named **build_dep.bat** where located /Dependencies
-5. Build the solution(if u build failed, please build again(**not rebuild**))
-6. Run the binary file by **_Out/rund.bat**
+2. Run the script file named **build_dep.bat** where located /Dependencies
+(墙内上网的同学请点击：墙内下载依赖库.bat)
+3. Build the solution(if u build failed, please build again(**not rebuild all**))
+4. Run the binary file by **_Out/rund.bat**
 
-### CMake ---- please use administrator(or sudo) to do these:
+### FOR LINUX(UBUNTU, CENTOS) ---- please use administrator(or sudo) to do these:
 1. Git pull all source
-2. Install cmake[>= 3.1] please choose options for installing: **Add CMake to the system PATH for all users and restart your computer**
-3. Install VS2015 or gcc[>= 4.8]
-4. Run Dependencies/build_dep.sh
-5. Run **install4cmake.bat** or **install4cmake.sh** to build NF
-6. Run the binary file by **_Out/rund.bat** or **_Out/rund.sh**
+2. Run **install4cmake.sh** to build NF (or run cd /Dependencies  ./build_dep.sh then run buildServer.sh)
+3. Run the binary file by **_Out/rund.sh**
+
+### IF YOU LIVING IN A COUNTRY CANNOT ACCESS GITHUB FASTLY PLZ BUILD NF WITH VPN
+
+### HOW TO RUN HELLO WORLD
+https://github.com/ketoo/NoahGameFrame/wiki/How-to-run-the-Helloworld
+
+### HOW TO DEBUG WITH UNITY3D
+https://github.com/ketoo/NoahGameFrame/wiki/How-to-debug-with-unity3d
+
+### Unity Multiplayer Demo
+WebSite:  https://github.com/ketoo/NFUnitySDK
+# <Password for REDIS:NoahGameFrame>
+![Showcase](https://github.com/ketoo/NoahGameFrame/wiki/images/showcase/unity3d.gif)
 
 
+## Tutorial && Documents
 
-### JAVA Project
-WebSite:  https://github.com/NFGameTeam/NFrame-java
-
-### C# Project
-WebSite:  https://github.com/ketoo/NFrame
-
+https://github.com/ketoo/NoahGameFrame/wiki
 
 ## License
 The NFrame project is currently available under the [Apache License](https://github.com/ketoo/NoahGameFrame/blob/develop/LICENSE).
@@ -305,6 +311,11 @@ Add your lua script file name on here [script_reload.lua](https://github.com/ket
 * Auther: bruce
 * GitHub: https://github.com/sniper00/moon.git
 * Description: A  cross-platform,lightweight,scalable game server framework  written in C++, and suport Lua Script.
+
+
+## Tutorial && Documents
+
+https://github.com/ketoo/NoahGameFrame/wiki
 
 
 

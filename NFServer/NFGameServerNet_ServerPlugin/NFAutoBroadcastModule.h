@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -38,8 +38,14 @@
 #include "NFComm/NFPluginModule/NFISceneModule.h"
 #include "NFComm/NFPluginModule/NFIGameServerToWorldModule.h"
 #include "NFComm/NFPluginModule/NFIGameServerNet_ServerModule.h"
-#include "NFComm/NFPluginModule/NFIAutoBroadcastModule.h"
 ////////////////////////////////////////////////////////////////////////////
+
+class NFIAutoBroadcastModule
+    : public NFIModule
+{
+public:
+
+};
 
 class NFAutoBroadcastModule
     : public NFIAutoBroadcastModule

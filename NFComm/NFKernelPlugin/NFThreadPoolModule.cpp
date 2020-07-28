@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -28,6 +28,7 @@
 
 NFThreadPoolModule::NFThreadPoolModule(NFIPluginManager* p)
 {
+    m_bIsExecute = true;
 	pPluginManager = p;
 }
 
@@ -37,7 +38,7 @@ NFThreadPoolModule::~NFThreadPoolModule()
 
 bool NFThreadPoolModule::Init()
 {
-	for (int i = 0; i < NF_ACTOR_THREAD_COUNT; ++i)
+	for (int i = 0; i < pPluginManager->GetAppCPUCount(); ++i)
 	{
 		mThreadPool.push_back(NF_SHARE_PTR<NFThreadCell>(NF_NEW NFThreadCell(this)));
 	}
@@ -69,7 +70,7 @@ bool NFThreadPoolModule::Execute()
     return true;
 }
 
-void NFThreadPoolModule::DoAsyncTask(const NFGUID taskID, const std::string & data, TASK_PROCESS_FUNCTOR_PTR asyncFunctor, TASK_PROCESS_FUNCTOR_PTR functor_end)
+void NFThreadPoolModule::DoAsyncTask(const NFGUID taskID, const std::string & data, TASK_PROCESS_FUNCTOR asyncFunctor, TASK_PROCESS_FUNCTOR functor_end)
 {
 	NFThreadTask task;
 	task.nTaskID = taskID;
@@ -77,7 +78,12 @@ void NFThreadPoolModule::DoAsyncTask(const NFGUID taskID, const std::string & da
 	task.xThreadFunc = asyncFunctor;
 	task.xEndFunc = functor_end;
 	
-	int index = taskID.nHead64 % mThreadPool.size();
+	int index = 0;
+	if (!taskID.IsNull())
+	{
+		index = taskID.nData64 % mThreadPool.size();
+	}
+	
 	NF_SHARE_PTR<NFThreadCell> threadobject = mThreadPool[index];
 	threadobject->AddTask(task);
 }
@@ -89,7 +95,7 @@ void NFThreadPoolModule::ExecuteTaskResult()
 	{
 		if (xMsg.xEndFunc)
 		{
-			xMsg.xEndFunc->operator()(xMsg);
+			xMsg.xEndFunc.operator()(xMsg);
 		}
 	}
 }
@@ -97,5 +103,10 @@ void NFThreadPoolModule::ExecuteTaskResult()
 void NFThreadPoolModule::TaskResult(const NFThreadTask& task)
 {
 	mTaskResult.Push(task);
+}
+
+int NFThreadPoolModule::GetThreadCount()
+{
+	return mThreadPool.size();
 }
 

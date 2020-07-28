@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -29,39 +29,126 @@
 #include "NFConfigPlugin.h"
 #include "NFElementModule.h"
 #include "NFClassModule.h"
+#include "NFIThreadPoolModule.h"
 
-////
+NFElementModule::NFElementModule(NFElementModule* p)
+{
+    mbLoaded = false;
+	originalElementModule = p;
+}
 
 NFElementModule::NFElementModule(NFIPluginManager* p)
 {
+	originalElementModule = this;
     pPluginManager = p;
     mbLoaded = false;
+
+	if (!this->mbBackup)
+	{
+		for (int i = 0; i < pPluginManager->GetAppCPUCount(); ++i)
+		{
+			ThreadElementModule threadElement;
+			threadElement.used = false;
+			threadElement.elementModule = new NFElementModule(this);
+			threadElement.elementModule->mbBackup = true;
+			threadElement.elementModule->pPluginManager = pPluginManager;
+
+			mThreadElements.push_back(threadElement);
+		}
+	}
 }
 
 NFElementModule::~NFElementModule()
 {
+    if (!this->mbBackup)
+    {
+		for (int i = 0; i < mThreadElements.size(); ++i)
+		{
+			delete mThreadElements[i].elementModule;
+		}
 
+		mThreadElements.clear();
+    }
 }
 
 bool NFElementModule::Awake()
 {
 	m_pClassModule = pPluginManager->FindModule<NFIClassModule>();
-	
+	m_pLogModule = pPluginManager->FindModule<NFILogModule>();
+
+	if (this->mbBackup)
+	{
+		for (int i = 0; i < originalElementModule->mThreadElements.size(); ++i)
+		{
+			if (originalElementModule->mThreadElements[i].elementModule == this)
+			{
+				m_pClassModule = m_pClassModule->GetThreadClassModule(i);
+				break;
+			}
+		}
+	}
+
+	for (int i = 0; i < mThreadElements.size(); ++i)
+	{
+		mThreadElements[i].elementModule->Awake();
+	}
+
 	Load();
-	
+
 	return true;
-	
 }
 
 bool NFElementModule::Init()
 {
+	for (int i = 0; i < mThreadElements.size(); ++i)
+	{
+		mThreadElements[i].elementModule->Init();
+	}
+
     return true;
+}
+
+bool NFElementModule::AfterInit()
+{
+	CheckRef();
+
+	for (int i = 0; i < mThreadElements.size(); ++i)
+	{
+		mThreadElements[i].elementModule->AfterInit();
+	}
+
+	return true;
 }
 
 bool NFElementModule::Shut()
 {
     Clear();
+
     return true;
+}
+
+NFIElementModule* NFElementModule::GetThreadElementModule()
+{
+	std::thread::id threadID = std::this_thread::get_id();
+
+	for (int i = 0; i < mThreadElements.size(); ++i)
+	{
+		if (mThreadElements[i].used)
+		{
+			if (mThreadElements[i].threadID == threadID)
+			{
+				return mThreadElements[i].elementModule;
+			}
+		}
+		else
+		{
+			mThreadElements[i].used = true;
+			mThreadElements[i].threadID = threadID;
+			return mThreadElements[i].elementModule;
+		}
+	}
+
+	return nullptr;
 }
 
 bool NFElementModule::Load()
@@ -99,6 +186,11 @@ bool NFElementModule::Load()
         pLogicClass = m_pClassModule->Next();
     }
 
+	for (int i = 0; i < mThreadElements.size(); ++i)
+	{
+		mThreadElements[i].elementModule->Load();
+	}
+
     return true;
 }
 
@@ -124,9 +216,10 @@ bool NFElementModule::CheckRef()
 						const std::string& strRefValue= this->GetPropertyString(strId, pProperty->GetKey());
 						if (!strRefValue.empty() && !this->GetElement(strRefValue))
 						{
-							std::string msg;
-							msg.append("check ref failed id: ").append(strRefValue).append(" in ").append(pLogicClass->GetClassName());
+							std::string msg = "check ref failed id:" + strRefValue + ", in " + pLogicClass->GetClassName() + "=>" + strId;
 							NFASSERT(nRet, msg.c_str(), __FILE__, __FUNCTION__);
+
+							m_pLogModule->LogError(msg, __FUNCTION__, __LINE__);
 							exit(0);
 						}
 					}
@@ -292,9 +385,15 @@ bool NFElementModule::Load(rapidxml::xml_node<>* attrNode, NF_SHARE_PTR<NFIClass
         }
     }
 
-    NFData xData;
-    xData.SetString(pLogicClass->GetClassName());
-    pElementPropertyManager->SetProperty("ClassName", xData);
+    NFData xDataClassName;
+    xDataClassName.SetString(pLogicClass->GetClassName());
+    pElementPropertyManager->SetProperty("ClassName", xDataClassName);
+
+
+    NFData xDataID;
+    xDataID.SetString(strConfigID);
+    pElementPropertyManager->SetProperty("ID", xDataID);
+    pElementPropertyManager->SetProperty("ConfigID", xDataID);
 
     return true;
 }
@@ -366,7 +465,6 @@ const NFVector3 NFElementModule::GetPropertyVector3(const std::string & strConfi
 	{
 		return pProperty->GetVector3();
 	}
-
 
 	return NFVector3();
 }
@@ -495,7 +593,7 @@ bool NFElementModule::ExistElement(const std::string& strClassName, const std::s
     const std::string& strClass = pElementInfo->GetPropertyManager()->GetPropertyString("ClassName");
     if (strClass != strClassName)
     {
-        return false;
+        return ExistElement(strConfigName);
     }
 
     return true;
@@ -571,13 +669,6 @@ bool NFElementModule::LegalFloat(const char * str)
 	}
 
 	return true;
-}
-
-bool NFElementModule::AfterInit()
-{
-    CheckRef();
-    return true;
-
 }
 
 bool NFElementModule::BeforeShut()

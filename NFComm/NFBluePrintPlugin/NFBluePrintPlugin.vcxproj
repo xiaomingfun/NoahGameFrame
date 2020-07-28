@@ -14,22 +14,22 @@
     <ProjectGuid>{EC279061-7EF8-483C-9D34-A6A1EE5D3908}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>NFTestPlugin</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0'">v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0'">v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -58,7 +58,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN;_DEBUG;_WINDOWS;_USRDLL;ELPP_NO_DEFAULT_LOG_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN;_DEBUG;_WINDOWS;ELPP_NO_DEFAULT_LOG_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BrowseInformation>false</BrowseInformation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -81,8 +81,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN;_WINDOWS;_USRDLL;ELPP_NO_DEFAULT_LOG_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN;_WINDOWS;ELPP_NO_DEFAULT_LOG_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,6 +95,14 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BluePrintNode\NFArithmetic.cpp" />
+    <ClCompile Include="BluePrintNode\NFBranch.cpp" />
+    <ClCompile Include="BluePrintNode\NFDebugger.cpp" />
+    <ClCompile Include="BluePrintNode\NFExecutor.cpp" />
+    <ClCompile Include="BluePrintNode\NFModifier.cpp" />
+    <ClCompile Include="BluePrintNode\NFMonitor.cpp" />
+    <ClCompile Include="BluePrintNode\NFVariable.cpp" />
+    <ClCompile Include="BluePrintVM\NFBPVirtualMachine.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -102,18 +111,24 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="NFBluePrintCppGeneratorModule.cpp" />
-    <ClCompile Include="NFBluePrintLoaderModule.cpp" />
-    <ClCompile Include="NFBluePrintLuaGeneratorModule.cpp" />
     <ClCompile Include="NFBluePrintModule.cpp" />
     <ClCompile Include="NFBluePrintPlugin.cpp" />
+    <ClCompile Include="NFBPVirtualMachineModule.cpp" />
+    <ClCompile Include="NFBPVMEventModule.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NFBluePrintCppGeneratorModule.h" />
-    <ClInclude Include="NFBluePrintLoaderModule.h" />
-    <ClInclude Include="NFBluePrintLuaGeneratorModule.h" />
+    <ClInclude Include="BluePrintNode\NFArithmetic.h" />
+    <ClInclude Include="BluePrintNode\NFBranch.h" />
+    <ClInclude Include="BluePrintNode\NFDebugger.h" />
+    <ClInclude Include="BluePrintNode\NFExecutor.h" />
+    <ClInclude Include="BluePrintNode\NFModifier.h" />
+    <ClInclude Include="BluePrintNode\NFMonitor.h" />
+    <ClInclude Include="BluePrintNode\NFVariable.h" />
+    <ClInclude Include="BluePrintVM\NFBPVirtualMachine.h" />
     <ClInclude Include="NFBluePrintModule.h" />
     <ClInclude Include="NFBluePrintPlugin.h" />
+    <ClInclude Include="NFBPVirtualMachineModule.h" />
+    <ClInclude Include="NFBPVMEventModule.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

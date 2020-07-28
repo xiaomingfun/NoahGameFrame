@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -81,7 +81,7 @@ bool NFLoginNet_HttpServerModule::AfterInit()
 
 bool NFLoginNet_HttpServerModule::Execute()
 {
-    m_pHttpNetModule->Execute();
+    //m_pHttpNetModule->Execute();
 	return true;
 }
 
@@ -173,7 +173,7 @@ bool NFLoginNet_HttpServerModule::OnWorldSelect(NF_SHARE_PTR<NFHttpRequest> req)
 	xData.mutable_sender()->CopyFrom(NFINetModule::NFToPB(NFGUID()));
 	xData.set_account(user);
 
-	m_pNetClientModule->SendSuitByPB(NF_SERVER_TYPES::NF_ST_MASTER, user, NFMsg::EGameMsgID::EGMI_REQ_CONNECT_WORLD, xData);
+	m_pNetClientModule->SendSuitByPB(NF_SERVER_TYPES::NF_ST_MASTER, user, NFMsg::EGameMsgID::REQ_CONNECT_WORLD, xData);
 	/*
 	while (true)
 	{

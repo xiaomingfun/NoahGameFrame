@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -25,7 +25,7 @@
 
 
 #ifndef NF_THREAD_POOL_MODULE_H
-#define NF_THREAD_POOL_NF_THREAD_POOL_MODULE_HMANAGER_H
+#define NF_THREAD_POOL_MODULE_H
 
 #include <map>
 #include <string>
@@ -33,11 +33,11 @@
 #include "NFComm/NFPluginModule/NFIThreadPoolModule.h"
 #include "NFComm/NFCore/NFQueue.hpp"
 
-
-class NFThreadCell
+class NFThreadCell : NFMemoryCounter
 {
 public:
 	NFThreadCell(NFIThreadPoolModule* p)
+			: NFMemoryCounter(GET_CLASS_NAME(NFThreadCell), 1)
 	{
 		m_pThreadPoolModule = p;
 		mThread = NF_SHARE_PTR<std::thread>(NF_NEW std::thread(&NFThreadCell::Execute, this));
@@ -48,6 +48,10 @@ public:
 		mTaskList.Push(task);
 	}
 
+	virtual void ToMemoryCounterString(std::string& info) override
+	{
+
+	}
 protected:
 
 	void Execute()
@@ -55,18 +59,24 @@ protected:
 		while (true)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			
-			//pick the first task and do it
-			NFThreadTask task;
-			if (mTaskList.TryPop(task))
 			{
-				task.xThreadFunc->operator()(task);
-
-				//repush the result to the main thread
-				//and, do we must to tell the result?
-				if (task.xEndFunc)
+				//pick the first task and do it
+				NFThreadTask task;
+				while (mTaskList.TryPop(task))
 				{
-					m_pThreadPoolModule->TaskResult(task);
+					if (task.xThreadFunc)
+					{
+						task.xThreadFunc.operator()(task);
+					}
+
+					//repush the result to the main thread
+					//and, do we must to tell the result?
+					if (task.xEndFunc)
+					{
+						m_pThreadPoolModule->TaskResult(task);
+					}
+
+					task.Reset();
 				}
 			}
 		}
@@ -85,6 +95,8 @@ public:
 	NFThreadPoolModule(NFIPluginManager* p);
     virtual ~NFThreadPoolModule();
 
+	virtual int GetThreadCount();
+
     virtual bool Init();
 
     virtual bool AfterInit();
@@ -95,7 +107,7 @@ public:
 
     virtual bool Execute();
 
-	virtual void DoAsyncTask(const NFGUID taskID, const std::string& data, TASK_PROCESS_FUNCTOR_PTR asyncFunctor, TASK_PROCESS_FUNCTOR_PTR functor_end);
+	virtual void DoAsyncTask(const NFGUID taskID, const std::string& data, TASK_PROCESS_FUNCTOR asyncFunctor, TASK_PROCESS_FUNCTOR functor_end);
 
 	virtual void TaskResult(const NFThreadTask& task);
 
@@ -103,11 +115,10 @@ protected:
 	void ExecuteTaskResult();
 
 private:
+	int mCPUCount = 1;
 
 	NFQueue<NFThreadTask> mTaskResult;
-	
 	std::vector<NF_SHARE_PTR<NFThreadCell>> mThreadPool;
-	//NFConsistentHashMapEx<int, NFThreadCell> mThreadPool;
 };
 
 #endif

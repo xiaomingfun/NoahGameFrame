@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -37,6 +37,8 @@
 #include "NFComm/NFPluginModule/NFIProxyServerToGameModule.h"
 #include "NFComm/NFPluginModule/NFINetClientModule.h"
 #include "NFComm/NFPluginModule/NFISecurityModule.h"
+#include "NFComm/NFPluginModule/NFIWSModule.h"
+#include "NFComm/NFPluginModule/NFIThreadPoolModule.h"
 
 class NFProxyServerNet_ServerModule : public NFIProxyServerNet_ServerModule
 {
@@ -52,7 +54,7 @@ public:
 
     virtual bool AfterInit();
 
-    virtual int Transpond(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen);
+    virtual int Transport(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen);
 
     
     virtual int EnterGameSuccessEvent(const NFGUID xClientID, const NFGUID xPlayerID);
@@ -64,6 +66,7 @@ protected:
     void OnClientDisconnect(const NFSOCK nAddress);
     void OnClientConnected(const NFSOCK nAddress);
 
+    void OnConnectKeyProcessWS(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen);
     void OnConnectKeyProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen);
     void OnReqServerListProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen);
     void OnSelectServerProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen);
@@ -85,8 +88,10 @@ protected:
     NFIElementModule* m_pElementModule;
     NFIClassModule* m_pClassModule;
 	NFINetModule* m_pNetModule;
+    NFIWSModule* m_pWsModule;
 	NFISecurityModule* m_pSecurityModule;
 	NFIProxyServerToWorldModule* m_pProxyToWorldModule;
+    NFIThreadPoolModule* m_pThreadPoolModule;
 };
 
 #endif

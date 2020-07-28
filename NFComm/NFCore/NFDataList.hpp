@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -46,7 +46,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
-#include "NFMemoryCounter.hpp"
+#include "NFMemoryCounter.h"
 #include "NFComm/NFPluginModule/NFGUID.h"
 #include "NFComm/NFPluginModule/NFPlatform.h"
 #include "NFComm/NFCore/NFVector2.hpp"
@@ -91,11 +91,54 @@ public:
 
 	NFData(NFDATA_TYPE eType)
 	{
+		bind = true;
 		nType = eType;
+	}
+	
+	NFData(int value)
+	{
+		bind = true;
+		this->SetInt(value);
+	}
+	NFData(int64_t value)
+	{
+		bind = true;
+		this->SetInt(value);
+	}
+
+	NFData(float value)
+	{
+		bind = true;
+		this->SetFloat(value);
+	}
+
+	NFData(double value)
+	{
+		bind = true;
+		this->SetFloat(value);
+	}
+
+	NFData(NFGUID value)
+	{
+		bind = true;
+		this->SetObject(value);
+	}
+
+	NFData(NFVector2 value)
+	{
+		bind = true;
+		this->SetVector2(value);
+	}
+
+	NFData(NFVector3 value)
+	{
+		bind = true;
+		this->SetVector3(value);
 	}
 
 	NFData(const NFData& value)
 	{
+		bind = value.bind;
 		nType = value.nType;
 		variantData = value.variantData;
 	}
@@ -514,13 +557,14 @@ public:
 private:
 
 	NFDATA_TYPE nType;
+	bool bind = false;
 
 public:
 	//std::variant
 	mapbox::util::variant<NFINT64, double, std::string, NFGUID, NFVector2, NFVector3> variantData;
 };
 
-class NFDataList :public NFMemoryCounter<NFDataList>
+class NFDataList :public NFMemoryCounter
 {
 public:
     NFDataList() : NFMemoryCounter(GET_CLASS_NAME(NFDataList))
@@ -556,6 +600,11 @@ public:
 		}
 
 		return os.str();
+	}
+
+	virtual void ToMemoryCounterString(std::string& data)
+	{
+		
 	}
 
 	virtual std::string ToString(const int index) const

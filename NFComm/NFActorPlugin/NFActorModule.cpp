@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -28,6 +28,7 @@
 
 NFActorModule::NFActorModule(NFIPluginManager* p)
 {
+    m_bIsExecute = true;
 	pPluginManager = p;
 
     srand((unsigned)time(NULL));
@@ -53,7 +54,7 @@ bool NFActorModule::AfterInit()
 
 bool NFActorModule::BeforeShut()
 {
-	mxActorMap.ClearAll();
+	mxActorMap.clear();
     return true;
 }
 
@@ -72,17 +73,23 @@ bool NFActorModule::Execute()
 }
 
 
-NFGUID NFActorModule::RequireActor()
+NF_SHARE_PTR<NFIActor> NFActorModule::RequireActor()
 {
 	NF_SHARE_PTR<NFIActor> pActor = NF_SHARE_PTR<NFIActor>(NF_NEW NFActor(m_pKernelModule->CreateGUID(), this));
-	mxActorMap.AddElement(pActor->ID(), pActor);
+	mxActorMap.insert(std::map<NFGUID, NF_SHARE_PTR<NFIActor>>::value_type(pActor->ID(), pActor));
 
-	return pActor->ID();
+	return pActor;
 }
 
 NF_SHARE_PTR<NFIActor> NFActorModule::GetActor(const NFGUID nActorIndex)
 {
-	return mxActorMap.GetElement(nActorIndex);
+	auto it = mxActorMap.find(nActorIndex);
+	if (it != mxActorMap.end())
+	{
+		return it->second;
+	}
+
+	return nullptr;
 }
 
 bool NFActorModule::AddResult(const NFActorMessage & message)
@@ -92,21 +99,34 @@ bool NFActorModule::AddResult(const NFActorMessage & message)
 
 bool NFActorModule::ExecuteEvent()
 {
-	for (auto it : mActorMessageCount)
+	static int64_t lastTime = 0;
+	int64_t nowTime = NFGetTimeMS();
+	if (nowTime < lastTime + 10)
 	{
-		const NFGUID id = it.first;
-		NF_SHARE_PTR<NFIActor> pActor = GetActor(id);
+		return false;
+	}
+
+	lastTime = nowTime;
+
+	for (auto it : mxActorMap)
+	{
+		NF_SHARE_PTR<NFIActor> pActor = it.second;
 		if (pActor)
 		{
-			m_pThreadPoolModule->DoAsyncTask("",
-				[pActor](NFThreadTask& threadTask) -> void
+			if (test)
 			{
 				pActor->Execute();
-			});
+			}
+			else
+			{
+				m_pThreadPoolModule->DoAsyncTask(pActor->ID(), "",
+					[pActor](NFThreadTask& threadTask) -> void
+					{
+						pActor->Execute();
+					});
+			}
 		}
 	}
-	
-	mActorMessageCount.clear();
 
 	return true;
 }
@@ -126,54 +146,53 @@ bool NFActorModule::ExecuteResultEvent()
 	return true;
 }
 
-bool NFActorModule::SendMsgToActor(const NFGUID nActorIndex, const int nEventID, const std::string& strArg)
+bool NFActorModule::SendMsgToActor(const NFGUID actorIndex, const NFGUID who, const int eventID, const std::string& data, const std::string& arg)
 {
-    NF_SHARE_PTR<NFIActor> pActor = GetActor(nActorIndex);
+	static uint64_t index = 0;
+    NF_SHARE_PTR<NFIActor> pActor = GetActor(actorIndex);
     if (nullptr != pActor)
     {
         NFActorMessage xMessage;
 
-		xMessage.id	= nActorIndex;
-        xMessage.data = strArg;
-        xMessage.msgID = nEventID;
+		xMessage.id = who;
+		xMessage.index	= index++;
+        xMessage.data = data;
+		xMessage.msgID = eventID;
+		xMessage.arg = arg;
 
-		mActorMessageCount[pActor->ID()] = 1;
 
-		return pActor->SendMsg(xMessage);
+		return this->SendMsgToActor(actorIndex, xMessage);
     }
 
     return false;
-}
-
-bool NFActorModule::AddComponent(const NFGUID nActorIndex, NF_SHARE_PTR<NFIComponent> pComponent)
-{
-    NF_SHARE_PTR<NFIActor> pActor = GetActor(nActorIndex);
-    if (nullptr != pActor)
-    {
-        pActor->AddComponent(pComponent);
-
-        return true;
-    }
-
-    return false;
-}
-
-bool NFActorModule::RemoveComponent(const NFGUID nActorIndex, const std::string& strComponentName)
-{
-	return false;
-}
-
-NF_SHARE_PTR<NFIComponent> NFActorModule::FindComponent(const NFGUID nActorIndex, const std::string& strComponentName)
-{
-	return nullptr;
 }
 
 bool NFActorModule::ReleaseActor(const NFGUID nActorIndex)
 {
-	return mxActorMap.RemoveElement(nActorIndex);
+	auto it = mxActorMap.find(nActorIndex);
+	if (it != mxActorMap.end())
+	{
+		mxActorMap.erase(it);
+	
+		return true;
+	}
+	
+	return false;
 }
 
 bool NFActorModule::AddEndFunc(const int subMessageID, ACTOR_PROCESS_FUNCTOR_PTR functorPtr_end)
 {
 	return mxEndFunctor.AddElement(subMessageID, functorPtr_end);
+}
+
+bool NFActorModule::SendMsgToActor(const NFGUID actorIndex, const NFActorMessage &message)
+{
+	auto it = mxActorMap.find(actorIndex);
+	if (it != mxActorMap.end())
+	{
+		//std::cout << "send message " << message.msgID << " to " << actorIndex.ToString() << " and msg index is " << message.index << std::endl;
+		return it->second->SendMsg(message);
+	}
+
+	return false;
 }

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -32,7 +32,6 @@
 //#pragma comment( lib, "RakNet_LibStatic_Debug_x64.lib" )
 #pragma comment( lib, "NFCore.lib" )
 #pragma comment( lib, "NFMessageDefine.lib" )
-#pragma comment( lib, "libprotobufd.lib" )
 #pragma comment( lib, "event_core.lib" )
 
 #elif NF_PLATFORM == NF_PLATFORM_LINUX || NF_PLATFORM == NF_PLATFORM_ANDROID
@@ -47,7 +46,6 @@
 #pragma comment( lib, "NFNetPlugin.lib" )
 #pragma comment( lib, "NFCore.lib" )
 #pragma comment( lib, "NFMessageDefine.lib" )
-#pragma comment( lib, "libprotobuf.lib" )
 #pragma comment( lib, "event_core.lib" )
 
 #elif NF_PLATFORM == NF_PLATFORM_LINUX || NF_PLATFORM == NF_PLATFORM_ANDROID

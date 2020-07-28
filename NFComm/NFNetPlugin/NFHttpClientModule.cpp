@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -30,6 +30,7 @@
 
 NFHttpClientModule::NFHttpClientModule(NFIPluginManager* p)
 {
+    m_bIsExecute = true;
     pPluginManager = p;
     m_pHttpClient = new NFHttpClient();
     m_xDefaultHttpHeaders["Connection"] = "close";
@@ -61,7 +62,7 @@ bool NFHttpClientModule::AfterInit()
 
 bool NFHttpClientModule::Execute()
 {
-    m_pHttpClient->Execute();
+    m_pHttpClient->Execute();//TODO
     return true;
 }
 
@@ -90,7 +91,7 @@ int NFHttpClientModule::Post(const std::string & strUri, const std::map<std::str
 	NF_SHARE_PTR<RespData> xRespData = mxRespDataMap.GetElement(id);
 	while (!xRespData->resp)
 	{
-		pPluginManager->YieldCo();
+        NFSLEEP(1);
 	}
 
 	strResData = xRespData->strRespData;
@@ -115,7 +116,7 @@ int NFHttpClientModule::Get(const std::string & strUri, const std::map<std::stri
 	NF_SHARE_PTR<RespData> xRespData = mxRespDataMap.GetElement(id);
 	while (!xRespData->resp)
 	{
-		pPluginManager->YieldCo();
+        NFSLEEP(1);
 	}
 
 	strResData = xRespData->strRespData;

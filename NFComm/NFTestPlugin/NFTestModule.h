@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -41,6 +41,7 @@ class NFTestModule
 public:
     NFTestModule( NFIPluginManager* p )
     {
+        m_bIsExecute = true;
         pPluginManager = p;
     }
 

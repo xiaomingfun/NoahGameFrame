@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -28,8 +28,13 @@
 
 #include "NFComm/NFCore/NFMap.hpp"
 #include "NFComm/NFPluginModule/NFIKernelModule.h"
-#include "NFComm/NFPluginModule/NFIGameServerModule.h"
 #include "NFComm/NFPluginModule/NFIClassModule.h"
+
+class NFIGameServerModule
+    : public NFIModule
+{
+
+};
 
 class NFGameServerModule
     : public NFIGameServerModule
@@ -37,6 +42,7 @@ class NFGameServerModule
 public:
     NFGameServerModule(NFIPluginManager* p)
     {
+        m_bIsExecute = true;
         pPluginManager = p;
     }
     virtual ~NFGameServerModule() {};

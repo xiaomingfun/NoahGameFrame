@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -27,36 +27,13 @@
 #define NFI_ACTOR_MODULE_H
 
 #include "NFIModule.h"
-#include "NFIActor.h"
 #include "NFIComponent.h"
 
 ///////////////////////////////////////////////////
 
-class NFIComponent;
-
 class NFIActorModule : public NFIModule
 {
 public:
-    template<typename TypeComponent>
-    NFGUID RequireActor()
-    {
-        if (!TIsDerived<TypeComponent, NFIComponent>::Result)
-        {
-            //BaseTypeComponent must inherit from NFIComponent;
-            return NFGUID();
-        }
-
-        NFGUID nActorID = RequireActor();
-        if (!nActorID.IsNull())
-        {
-            AddComponent<TypeComponent>(nActorID);
-
-            return nActorID;
-        }
-
-        return NFGUID();
-    }
-
 	template<typename TypeComponent>
 	bool AddComponent(const NFGUID nActorIndex)
 	{
@@ -69,12 +46,11 @@ public:
 		NF_SHARE_PTR<NFIActor> pActor = GetActor(nActorIndex);
 		if (pActor)
 		{
-			//use CreateNewInstance to replace this line to create a new component script
-			NF_SHARE_PTR<TypeComponent> pComponent = NF_SHARE_PTR<TypeComponent>(NF_NEW TypeComponent());
-
-			//GET_CLASS_NAME(TypeComponent);
-
-			return AddComponent(nActorIndex, pComponent);
+			auto component = pActor->AddComponent<TypeComponent>();
+			if (component)
+			{
+				return true;
+			}
 		}
 
 		return false;
@@ -96,11 +72,11 @@ public:
 		return AddEndFunc(subMessageID, functorPtr_end);
 	}
 
-	virtual NFGUID RequireActor() = 0;
+	virtual NF_SHARE_PTR<NFIActor> RequireActor() = 0;
 	virtual NF_SHARE_PTR<NFIActor> GetActor(const NFGUID nActorIndex) = 0;
 	virtual bool ReleaseActor(const NFGUID nActorIndex) = 0;
 
-    virtual bool SendMsgToActor(const NFGUID nActorIndex, const int messageID, const std::string& strArg) = 0;
+	virtual bool SendMsgToActor(const NFGUID actorIndex, const NFGUID who, const int eventID, const std::string& data, const std::string& arg = "") = 0;
 
 	//only be called by actor's processor
     virtual bool AddResult(const NFActorMessage& message) = 0;
@@ -108,10 +84,6 @@ public:
 protected:
 
 	virtual bool AddEndFunc(const int subMessageID, ACTOR_PROCESS_FUNCTOR_PTR functorPtr_end) = 0;
-	
-    virtual bool AddComponent(const NFGUID nActorIndex, NF_SHARE_PTR<NFIComponent> pComponent) = 0;
-	virtual bool RemoveComponent(const NFGUID nActorIndex, const std::string& strComponentName) = 0;
-	virtual NF_SHARE_PTR<NFIComponent> FindComponent(const NFGUID nActorIndex, const std::string& strComponentName) = 0;
 };
 
 #endif

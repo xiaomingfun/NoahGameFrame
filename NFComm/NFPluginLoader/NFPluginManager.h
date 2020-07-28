@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -31,11 +31,8 @@
 #include <time.h>
 #include <thread>
 #include "NFDynLib.h"
-#include "NFCoroutineManager.h"
 #include "NFComm/NFPluginModule/NFIModule.h"
 #include "NFComm/NFPluginModule/NFIPluginManager.h"
-
-void CoroutineExecute(void* arg);
 
 class NFPluginManager
     : public NFIPluginManager
@@ -43,6 +40,8 @@ class NFPluginManager
 public:
     NFPluginManager();
     virtual ~NFPluginManager();
+
+    virtual bool LoadPluginConfig() override;
 
     virtual bool LoadPlugin() override;
 
@@ -85,7 +84,8 @@ public:
 
     virtual NFIModule* FindTestModule(const std::string& strModuleName) override;
 
-    virtual std::list<NFIModule*> Modules() override;
+	virtual std::list<NFIModule*> Modules() override;
+	virtual std::list<NFIModule*> TestModules() override;
 
     virtual bool Execute() override;
 
@@ -118,24 +118,22 @@ public:
     virtual void SetLogConfigName(const std::string& strName) override;
 
     virtual NFIPlugin* GetCurrentPlugin() override;
-    virtual NFIModule* GetCurrenModule() override;
+    virtual NFIModule* GetCurrentModule() override;
 
     virtual void SetCurrentPlugin(NFIPlugin* pPlugin) override;
-    virtual void SetCurrenModule(NFIModule* pModule) override;
+    virtual void SetCurrentModule(NFIModule* pModule) override;
+
+	virtual int GetAppCPUCount() const override;
+	virtual void SetAppCPUCount(const int count) override;
 
     virtual void SetGetFileContentFunctor(GET_FILECONTENT_FUNCTOR fun) override;
 
     virtual bool GetFileContent(const std::string &strFileName, std::string &strContent) override;
 
-    virtual void ExecuteCoScheduler() override;
-
-    virtual void YieldCo(const int64_t nSecond) override;
-
-    virtual void YieldCo() override;
-    
+	virtual void AddFileReplaceContent(const std::string& fileName, const std::string& content, const std::string& newValue);
+	virtual std::vector<NFReplaceContent> GetFileReplaceContents(const std::string& fileName);
 
 protected:
-    bool LoadPluginConfig();
 
     bool LoadStaticPlugin();
     bool CheckStaticPlugin();
@@ -150,7 +148,8 @@ private:
     bool mbIsDocker;
     bool mbStaticPlugin;
     NFINT64 mnInitTime;
-    NFINT64 mnNowTime;
+	NFINT64 mnNowTime;
+	NFINT64 mnCPUCount = 1;
     std::string mstrConfigPath;
     std::string mstrConfigName;
     std::string mstrAppName;
@@ -164,21 +163,22 @@ private:
     typedef std::map<std::string, NFIPlugin*> PluginInstanceMap;
     typedef std::map<std::string, NFIModule*> ModuleInstanceMap;
     typedef std::map<std::string, NFIModule*> TestModuleInstanceMap;
+    typedef std::vector<std::pair<std::string, NFIModule*>> NeedExectuteModuleVec;
 
     typedef void(* DLL_START_PLUGIN_FUNC)(NFIPluginManager* pm);
     typedef void(* DLL_STOP_PLUGIN_FUNC)(NFIPluginManager* pm);
 
     std::vector<std::string> mStaticPlugin;
+	std::map<std::string, std::vector<NFReplaceContent>> mReplaceContent;
 
     PluginNameMap mPluginNameMap;
     PluginLibMap mPluginLibMap;
     PluginInstanceMap mPluginInstanceMap;
     ModuleInstanceMap mModuleInstanceMap;
     TestModuleInstanceMap mTestModuleInstanceMap;
+    NeedExectuteModuleVec mNeedExecuteModuleVec;
 
     GET_FILECONTENT_FUNCTOR mGetFileContentFunctor;
-
-    NFCoroutineManager mxCoroutineManager;
 };
 
 #endif

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -33,7 +33,6 @@
 #include "NFComm/NFCore/NFQueue.hpp"
 #include "NFComm/NFPluginModule/NFGUID.h"
 #include "NFComm/NFPluginModule/NFPlatform.h"
-#include "NFComm/NFPluginModule/NFIActor.h"
 #include "NFComm/NFPluginModule/NFIComponent.h"
 #include "NFComm/NFPluginModule/NFIActorModule.h"
 
@@ -52,10 +51,13 @@ public:
 	virtual bool RemoveComponent(const std::string& strComponentName);
 	virtual NF_SHARE_PTR<NFIComponent> FindComponent(const std::string& strComponentName);
 
-	virtual bool AddMessageHandler(const int nSubMsgID, ACTOR_PROCESS_FUNCTOR_PTR xBeginFunctor);
-
     virtual bool SendMsg(const NFActorMessage& message);
+    virtual bool SendMsg(const int eventID, const std::string& data, const std::string& arg);
+    virtual bool BackMsgToMainThread(const NFActorMessage& message);
 
+    virtual bool AddMessageHandler(const int nSubMsgID, ACTOR_PROCESS_FUNCTOR_PTR xBeginFunctor);
+
+    virtual void ToMemoryCounterString(std::string& info);
 protected:
 	NFGUID id;
 
@@ -63,7 +65,7 @@ protected:
 
     NFQueue<NFActorMessage> mMessageQueue;
 
-	NFMapEx<std::string, NFIComponent> mxComponent;
+	NFMapEx<std::string, NFIComponent> mComponent;
 
 	NFMapEx<int, ACTOR_PROCESS_FUNCTOR> mxProcessFunctor;
 };

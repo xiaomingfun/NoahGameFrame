@@ -3,7 +3,7 @@ This file is part of:
 NoahFrame
 https://github.com/ketoo/NoahGameFrame
 
-Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
 File creator: lvsheng.huang
 
@@ -47,7 +47,6 @@ limitations under the License.
 #ifdef NF_DEBUG_MODE
 
 #if NF_PLATFORM == NF_PLATFORM_WIN
-#pragma comment( lib, "libprotobufd.lib" )
 
 #elif NF_PLATFORM == NF_PLATFORM_LINUX || NF_PLATFORM == NF_PLATFORM_ANDROID
 
@@ -57,7 +56,6 @@ limitations under the License.
 #else
 
 #if NF_PLATFORM == NF_PLATFORM_WIN
-#pragma comment( lib, "libprotobuf.lib" )
 
 #elif NF_PLATFORM == NF_PLATFORM_LINUX || NF_PLATFORM == NF_PLATFORM_ANDROID
 

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -34,10 +34,10 @@
 typedef std::function<int(const NFGUID&, const std::string&, const NFData&, const NFData&)> PROPERTY_EVENT_FUNCTOR;
 typedef NF_SHARE_PTR<PROPERTY_EVENT_FUNCTOR> PROPERTY_EVENT_FUNCTOR_PTR;
 
-class _NFExport NFIProperty :public NFMemoryCounter<NFIProperty>
+class _NFExport NFIProperty : public NFMemoryCounter
 {
 public:
-	NFIProperty() : NFMemoryCounter(GET_CLASS_NAME(NFIProperty))
+	NFIProperty() : NFMemoryCounter(GET_CLASS_NAME(NFIProperty), 1)
 	{
 	}
 

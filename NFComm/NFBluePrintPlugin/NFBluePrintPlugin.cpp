@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -26,13 +26,11 @@
 
 
 #include "NFBluePrintModule.h"
-#include "NFBluePrintCppGeneratorModule.h"
-#include "NFBluePrintLoaderModule.h"
-#include "NFBluePrintLuaGeneratorModule.h"
+#include "NFBPVirtualMachineModule.h"
+#include "NFBPVirtualMachineModule.h"
+#include "NFBPVMEventModule.h"
 #include "NFBluePrintPlugin.h"
 
-//
-//
 #ifdef NF_DYNAMIC_PLUGIN
 
 NF_EXPORT void DllStartPlugin(NFIPluginManager* pm)
@@ -62,17 +60,15 @@ const std::string NFBluePrintPlugin::GetPluginName()
 
 void NFBluePrintPlugin::Install()
 {
-	REGISTER_MODULE(pPluginManager, NFIBluePrintLuaGeneratorModule, NFBluePrintLuaGeneratorModule)
-	REGISTER_MODULE(pPluginManager, NFIBluePrintLoaderModule, NFBluePrintLoaderModule)
-	REGISTER_MODULE(pPluginManager, NFIBluePrintCppGeneratorModule, NFBluePrintCppGeneratorModule)
-	REGISTER_MODULE(pPluginManager, NFIBluePrintModule, NFBluePrintModule)
+	REGISTER_MODULE(pPluginManager, NFIBPVirtualMachineModule, NFBPVirtualMachineModule)
+    REGISTER_MODULE(pPluginManager, NFIBluePrintModule, NFBluePrintModule)
+    REGISTER_MODULE(pPluginManager, NFIBPVMEventModule, NFBPVMEventModule)
 
 }
 
 void NFBluePrintPlugin::Uninstall()
 {
-	UNREGISTER_MODULE(pPluginManager, NFIBluePrintModule, NFBluePrintModule)
-	UNREGISTER_MODULE(pPluginManager, NFIBluePrintCppGeneratorModule, NFBluePrintCppGeneratorModule)
-	UNREGISTER_MODULE(pPluginManager, NFIBluePrintLoaderModule, NFBluePrintLoaderModule)
-	UNREGISTER_MODULE(pPluginManager, NFIBluePrintLuaGeneratorModule, NFBluePrintLuaGeneratorModule)
+    UNREGISTER_MODULE(pPluginManager, NFIBPVMEventModule, NFBPVMEventModule)
+    UNREGISTER_MODULE(pPluginManager, NFIBluePrintModule, NFBluePrintModule)
+	UNREGISTER_MODULE(pPluginManager, NFIBPVirtualMachineModule, NFBPVirtualMachineModule)
 }

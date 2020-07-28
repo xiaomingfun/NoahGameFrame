@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -30,6 +30,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <thread>
 #include "Dependencies/RapidXML/rapidxml.hpp"
 #include "Dependencies/RapidXML/rapidxml_iterators.hpp"
 #include "Dependencies/RapidXML/rapidxml_print.hpp"
@@ -42,6 +43,7 @@
 #include "NFComm/NFCore/NFRecordManager.h"
 #include "NFComm/NFPluginModule/NFIElementModule.h"
 #include "NFComm/NFPluginModule/NFIClassModule.h"
+#include "NFComm/NFPluginModule/NFILogModule.h"
 
 class NFClass;
 
@@ -80,10 +82,11 @@ class NFElementModule
     : public NFIElementModule,
       NFMapEx<std::string, ElementConfigInfo>
 {
+private:
+    NFElementModule(NFElementModule* p);
 public:
     NFElementModule(NFIPluginManager* p);
     virtual ~NFElementModule();
-
 	
 	virtual bool Awake();
     virtual bool Init();
@@ -96,6 +99,8 @@ public:
     virtual bool Load();
     virtual bool Save();
     virtual bool Clear();
+
+    NFIElementModule* GetThreadElementModule() override;
 
     virtual bool LoadSceneInfo(const std::string& strFileName, const std::string& strClassName);
 
@@ -124,8 +129,22 @@ protected:
 	virtual bool LegalFloat(const char* str);
 
 protected:
+	struct ThreadElementModule
+	{
+		bool used;
+		std::thread::id threadID;
+		NFElementModule* elementModule;
+	};
+
+	std::vector<ThreadElementModule> mThreadElements;
+	NFElementModule* originalElementModule;
+
+protected:
     NFIClassModule* m_pClassModule;
+	NFILogModule* m_pLogModule;
+
     bool mbLoaded;
+    bool mbBackup = false;
 };
 
 #endif

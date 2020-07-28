@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -39,7 +39,8 @@ bool NFCreateRoleModule::Init()
 	m_pScheduleModule = pPluginManager->FindModule<NFIScheduleModule>();
 	m_pDataTailModule = pPluginManager->FindModule<NFIDataTailModule>();
 	m_pSceneModule = pPluginManager->FindModule<NFISceneModule>();
-	
+	m_pEventModule = pPluginManager->FindModule<NFIEventModule>();
+
     return true;
 }
 
@@ -52,24 +53,24 @@ bool NFCreateRoleModule::AfterInit()
 
 bool NFCreateRoleModule::ReadyExecute()
 {
-	m_pNetModule->RemoveReceiveCallBack(NFMsg::EGMI_REQ_ROLE_LIST);
-	m_pNetModule->RemoveReceiveCallBack(NFMsg::EGMI_REQ_CREATE_ROLE);
-	m_pNetModule->RemoveReceiveCallBack(NFMsg::EGMI_REQ_DELETE_ROLE);
-	m_pNetModule->RemoveReceiveCallBack(NFMsg::EGMI_REQ_ENTER_GAME);
+	m_pNetModule->RemoveReceiveCallBack(NFMsg::REQ_ROLE_LIST);
+	m_pNetModule->RemoveReceiveCallBack(NFMsg::REQ_CREATE_ROLE);
+	m_pNetModule->RemoveReceiveCallBack(NFMsg::REQ_DELETE_ROLE);
+	m_pNetModule->RemoveReceiveCallBack(NFMsg::REQ_ENTER_GAME);
 
 
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_ROLE_LIST, this, &NFCreateRoleModule::OnReqiureRoleListProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_CREATE_ROLE, this, &NFCreateRoleModule::OnCreateRoleGameProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_DELETE_ROLE, this, &NFCreateRoleModule::OnDeleteRoleGameProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_ENTER_GAME, this, &NFCreateRoleModule::OnClienEnterGameProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_ROLE_LIST, this, &NFCreateRoleModule::OnRequireRoleListProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_CREATE_ROLE, this, &NFCreateRoleModule::OnCreateRoleGameProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_DELETE_ROLE, this, &NFCreateRoleModule::OnDeleteRoleGameProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_ENTER_GAME, this, &NFCreateRoleModule::OnClientEnterGameProcess);
 
-	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_DB, NFMsg::EGMI_ACK_ROLE_LIST, this, &NFCreateRoleModule::OnResponseRoleListProcess);
-	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_DB, NFMsg::EGMI_ACK_LOAD_ROLE_DATA, this, &NFCreateRoleModule::OnDBLoadRoleDataProcess);
+	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_DB, NFMsg::ACK_ROLE_LIST, this, &NFCreateRoleModule::OnResponseRoleListProcess);
+	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_DB, NFMsg::ACK_LOAD_ROLE_DATA, this, &NFCreateRoleModule::OnDBLoadRoleDataProcess);
 
 	return true;
 }
 
-void NFCreateRoleModule::OnReqiureRoleListProcess(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
+void NFCreateRoleModule::OnRequireRoleListProcess(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
 {
 	m_pNetClientModule->SendBySuitWithOutHead(NF_SERVER_TYPES::NF_ST_DB, nSockIndex, nMsgID, std::string(msg, nLen));
 }
@@ -100,7 +101,7 @@ void NFCreateRoleModule::OnDeleteRoleGameProcess(const NFSOCK nSockIndex, const 
 	m_pNetClientModule->SendBySuitWithOutHead(NF_SERVER_TYPES::NF_ST_DB, nSockIndex, nMsgID, std::string(msg, nLen));
 }
 
-void NFCreateRoleModule::OnClienEnterGameProcess(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
+void NFCreateRoleModule::OnClientEnterGameProcess(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
 {
 	NFGUID nClientID;
 	NFMsg::ReqEnterGameServer xMsg;
@@ -113,20 +114,7 @@ void NFCreateRoleModule::OnClienEnterGameProcess(const NFSOCK nSockIndex, const 
 
 	if (m_pKernelModule->GetObject(nRoleID))
 	{
-		//it should be rebind with proxy's netobject
-		m_pScheduleModule->RemoveSchedule(nRoleID, "DestroyPlayerOnTime");
-
-		const int sceneID = m_pKernelModule->GetPropertyInt(nRoleID, NFrame::Player::SceneID());
-		const int groupID = m_pKernelModule->GetPropertyInt(nRoleID, NFrame::Player::GroupID());
-		const NFGUID matchID = m_pSceneModule->GetPropertyObject(sceneID, groupID, NFrame::Group::MatchID());
-		if (!matchID.IsNull())
-		{
-			//reconnect to the match
-		}
-		else
-		{
-			m_pKernelModule->DestroyObject(nRoleID);
-		}
+		m_pKernelModule->DestroyObject(nRoleID);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -164,7 +152,7 @@ void NFCreateRoleModule::OnClienEnterGameProcess(const NFSOCK nSockIndex, const 
 		return;
 	}
 
-	m_pNetClientModule->SendBySuitWithOutHead(NF_SERVER_TYPES::NF_ST_DB, nSockIndex, NFMsg::EGMI_REQ_LOAD_ROLE_DATA, std::string(msg, nLen));
+	m_pNetClientModule->SendBySuitWithOutHead(NF_SERVER_TYPES::NF_ST_DB, nSockIndex, NFMsg::REQ_LOAD_ROLE_DATA, std::string(msg, nLen));
 
 }
 
@@ -211,6 +199,9 @@ void NFCreateRoleModule::OnDBLoadRoleDataProcess(const NFSOCK nSockIndex, const 
 		var.AddString(NFrame::Player::GameID());
 		var.AddInt(pPluginManager->GetAppID());
 
+		var.AddString(NFrame::Player::Connection());
+		var.AddInt(1);
+
 		/*
 		var.AddString(NFrame::Player::HomeSceneID());
 		var.AddInt(1);
@@ -228,10 +219,21 @@ void NFCreateRoleModule::OnDBLoadRoleDataProcess(const NFSOCK nSockIndex, const 
 			return;
 		}
 
-		//get data first then create player
-		const int nHomeSceneID = pObject->GetPropertyInt(NFrame::Player::HomeSceneID());
-		const NFVector3& pos = m_pSceneModule->GetRelivePosition(nHomeSceneID, 0);
-		m_pSceneProcessModule->RequestEnterScene(pObject->Self(), nHomeSceneID, -1, 0, pos, NFDataList());
+		/////////////////////////////
+		const int group = m_pKernelModule->GetPropertyInt(pObject->Self(), NFrame::IObject::GroupID());
+		if (group <= 0)
+		{
+			/////////////////////////////
+			//sometimes, the player might disconnected from game server and want to reconnect.
+			//Basic on this reason, developer could move this kinds of players into the specific scene or group to avoid players move to the default scene.
+			//If developers move that kinds of players into the specific scene or group, which means the group value will NOT ZERO!
+			//COE_CREATE_FINISH
+
+			/////////////////////////////
+			const int nHomeSceneID = 1;
+			const NFVector3& pos = m_pSceneModule->GetRelivePosition(nHomeSceneID, 0);
+			m_pSceneProcessModule->RequestEnterScene(pObject->Self(), nHomeSceneID, -1, 0, pos, NFDataList::Empty());
+		}
 	}
 }
 
@@ -316,7 +318,7 @@ void NFCreateRoleModule::SaveData(const NFGUID & self)
 			ConvertRecordManagerToPB(xRecordManager, xDataPack.mutable_record());
 		}
 
-		m_pNetClientModule->SendSuitByPB(NF_SERVER_TYPES::NF_ST_DB, self.GetData(), NFMsg::EGMI_REQ_SAVE_ROLE_DATA, xDataPack);
+		m_pNetClientModule->SendSuitByPB(NF_SERVER_TYPES::NF_ST_DB, self.GetData(), NFMsg::REQ_SAVE_ROLE_DATA, xDataPack);
 	}
 }
 
@@ -617,8 +619,6 @@ bool NFCreateRoleModule::ConvertPropertyManagerToPB(const NF_SHARE_PTR<NFIProper
 					NFMsg::PropertyString* pData = pPropertyData->add_property_string_list();
 					pData->set_property_name(xPropert->GetKey());
 					pData->set_data(xPropert->GetString());
-
-					std::cout << xPropert->GetKey() << " " << xPropert->GetString() << std::endl;
 				}
 				break;
 

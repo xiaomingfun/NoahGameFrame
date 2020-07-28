@@ -1,3 +1,4 @@
+add_subdirectory(NFServer)
 add_subdirectory(NFPluginLoader)
 add_subdirectory(NFActorPlugin)
 add_subdirectory(NFConfigPlugin)
@@ -13,6 +14,6 @@ add_subdirectory(NFTestPlugin)
 add_subdirectory(NFLuaScriptPlugin)
 
 if (APPLE)
-    add_subdirectory(NFUIPlugin)
+    add_subdirectory(NFRenderPlugin)
     add_subdirectory(NFBluePrintPlugin)
 endif()

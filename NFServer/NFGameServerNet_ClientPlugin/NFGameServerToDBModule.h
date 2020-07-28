@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -24,13 +24,12 @@
 */
 
 
-#ifndef NF_GAMESERVER_TO_DB_NETCLIENT_MODULE_H
-#define NF_GAMESERVER_TO_DB_NETCLIENT_MODULE_H
+#ifndef NF_GAME_SERVER_TO_DB_MODULE_H
+#define NF_GAME_SERVER_TO_DB_MODULE_H
 
 #include "NFComm/NFMessageDefine/NFMsgDefine.h"
 #include "NFComm/NFPluginModule/NFINetModule.h"
 #include "NFComm/NFPluginModule/NFINetClientModule.h"
-#include "NFComm/NFPluginModule/NFIGameServerNet_ClientModule.h"
 #include "NFComm/NFPluginModule/NFIGameServerNet_ServerModule.h"
 #include "NFComm/NFPluginModule/NFIKernelModule.h"
 #include "NFComm/NFPluginModule/NFINetModule.h"

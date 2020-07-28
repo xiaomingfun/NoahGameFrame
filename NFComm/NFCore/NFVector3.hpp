@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -28,11 +28,11 @@
 
 #include <iostream>
 #include <string>
+#include "NFVector2.hpp"
 
 class NFLine;
 class NFBox;
 class NFPlane;
-class NFVector2;
 
 class NFVector3
 {

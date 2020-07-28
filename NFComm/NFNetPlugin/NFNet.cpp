@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -27,6 +27,8 @@
 #include <atomic>
 
 #include "NFNet.h"
+#include "NFComm/NFCore/NFException.h"
+
 #if NF_PLATFORM == NF_PLATFORM_WIN
 #include <WS2tcpip.h>
 #include <winsock2.h>
@@ -376,7 +378,29 @@ bool NFNet::Dismantle(NetObject* pObject)
         {
             if (mRecvCB)
             {
-                mRecvCB(pObject->GetRealFD(), xHead.GetMsgID(), pObject->GetBuff() + NFIMsgHead::NF_Head::NF_HEAD_LENGTH, nMsgBodyLength);
+
+#if NF_PLATFORM == NF_PLATFORM_WIN
+                __try
+#else
+                try
+#endif
+                {
+                    mRecvCB(pObject->GetRealFD(), xHead.GetMsgID(), pObject->GetBuff() + NFIMsgHead::NF_Head::NF_HEAD_LENGTH, nMsgBodyLength);
+                }
+#if NF_PLATFORM == NF_PLATFORM_WIN
+                    __except (ApplicationCrashHandler(GetExceptionInformation()))
+    {
+    }
+#else
+                catch (const std::exception & e)
+                {
+                    NFException::StackTrace(xHead.GetMsgID());
+                }
+                catch (...)
+                {
+                    NFException::StackTrace(xHead.GetMsgID());
+                }
+#endif
 
                 mnReceiveMsgTotal++;
             }
@@ -503,6 +527,7 @@ int NFNet::InitServerNet()
     WSADATA wsa_data;
     WSAStartup(0x0201, &wsa_data);
 
+
 #endif
     //////////////////////////////////////////////////////////////////////////
 
@@ -510,19 +535,20 @@ int NFNet::InitServerNet()
 
 #if NF_PLATFORM == NF_PLATFORM_WIN
 
+	//it is only on Windows, and only when IOCP is in use.
+	/*
+    if (event_config_set_num_cpus_hint(cfg, nCpuCount) < 0)
+    {
+        return -1;
+    }
+	*/
     mxBase = event_base_new_with_config(cfg);
-
 #else
 
     //event_config_avoid_method(cfg, "epoll");
     if (event_config_set_flag(cfg, EVENT_BASE_FLAG_EPOLL_USE_CHANGELIST) < 0)
     {
         
-        return -1;
-    }
-
-    if (event_config_set_num_cpus_hint(cfg, nCpuCount) < 0)
-    {
         return -1;
     }
 

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -39,6 +39,8 @@ public:
     virtual bool Load() = 0;
     virtual bool Save() = 0;
     virtual bool Clear() = 0;
+
+	virtual NFIElementModule* GetThreadElementModule() = 0;
 
     //special
     virtual bool LoadSceneInfo(const std::string& strFileName, const std::string& strClassName) = 0;

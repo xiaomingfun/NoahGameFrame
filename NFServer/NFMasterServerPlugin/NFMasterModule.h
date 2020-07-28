@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -26,8 +26,12 @@
 #define NF_MASTER_MODULE_H
 
 #include "NFComm/NFPluginModule/NFIKernelModule.h"
-#include "NFComm/NFPluginModule/NFIMasterModule.h"
 #include "NFComm/NFPluginModule/NFIMasterNet_ServerModule.h"
+
+class NFIMasterModule
+    : public NFIModule
+{
+};
 
 class NFMasterModule
     : public NFIMasterModule

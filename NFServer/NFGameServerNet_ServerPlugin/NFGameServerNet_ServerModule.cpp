@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -41,6 +41,7 @@ bool NFGameServerNet_ServerModule::Init()
 	
 	m_pNetModule = pPluginManager->FindModule<NFINetModule>();
 	m_pNetClientModule = pPluginManager->FindModule<NFINetClientModule>();
+	m_pThreadPoolModule = pPluginManager->FindModule<NFIThreadPoolModule>();
 
 	return true;
 }
@@ -48,54 +49,39 @@ bool NFGameServerNet_ServerModule::Init()
 bool NFGameServerNet_ServerModule::AfterInit()
 {
 
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_PTWG_PROXY_REFRESH, this, &NFGameServerNet_ServerModule::OnRefreshProxyServerInfoProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_PTWG_PROXY_REGISTERED, this, &NFGameServerNet_ServerModule::OnProxyServerRegisteredProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_PTWG_PROXY_UNREGISTERED, this, &NFGameServerNet_ServerModule::OnProxyServerUnRegisteredProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_ENTER_GAME, this, &NFGameServerNet_ServerModule::OnClientEnterGameProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_LEAVE_GAME, this, &NFGameServerNet_ServerModule::OnClientLeaveGameProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_ROLE_LIST, this, &NFGameServerNet_ServerModule::OnReqRoleListProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_CREATE_ROLE, this, &NFGameServerNet_ServerModule::OnCreateRoleGameProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_DELETE_ROLE, this, &NFGameServerNet_ServerModule::OnDeleteRoleGameProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_SWAP_SCENE, this, &NFGameServerNet_ServerModule::OnClientSwapSceneProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_ENTER_GAME_FINISH, this, &NFGameServerNet_ServerModule::OnClientEnterGameFinishProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::PTWG_PROXY_REFRESH, this, &NFGameServerNet_ServerModule::OnRefreshProxyServerInfoProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::PTWG_PROXY_REGISTERED, this, &NFGameServerNet_ServerModule::OnProxyServerRegisteredProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::PTWG_PROXY_UNREGISTERED, this, &NFGameServerNet_ServerModule::OnProxyServerUnRegisteredProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_LEAVE_GAME, this, &NFGameServerNet_ServerModule::OnClientLeaveGameProcess);
+
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_SWAP_SCENE, this, &NFGameServerNet_ServerModule::OnClientSwapSceneProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_ENTER_GAME_FINISH, this, &NFGameServerNet_ServerModule::OnClientEnterGameFinishProcess);
 	
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_PROPERTY_INT, this, &NFGameServerNet_ServerModule::OnClientPropertyIntProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_PROPERTY_FLOAT, this, &NFGameServerNet_ServerModule::OnClientPropertyFloatProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_PROPERTY_STRING, this, &NFGameServerNet_ServerModule::OnClientPropertyStringProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_PROPERTY_OBJECT, this, &NFGameServerNet_ServerModule::OnClientPropertyObjectProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_PROPERTY_VECTOR2, this, &NFGameServerNet_ServerModule::OnClientPropertyVector2Process);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_PROPERTY_VECTOR3, this, &NFGameServerNet_ServerModule::OnClientPropertyVector3Process);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_PROPERTY_INT, this, &NFGameServerNet_ServerModule::OnClientPropertyIntProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_PROPERTY_FLOAT, this, &NFGameServerNet_ServerModule::OnClientPropertyFloatProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_PROPERTY_STRING, this, &NFGameServerNet_ServerModule::OnClientPropertyStringProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_PROPERTY_OBJECT, this, &NFGameServerNet_ServerModule::OnClientPropertyObjectProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_PROPERTY_VECTOR2, this, &NFGameServerNet_ServerModule::OnClientPropertyVector2Process);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_PROPERTY_VECTOR3, this, &NFGameServerNet_ServerModule::OnClientPropertyVector3Process);
 	
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_ADD_ROW, this, &NFGameServerNet_ServerModule::OnClientAddRowProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_REMOVE_ROW, this, &NFGameServerNet_ServerModule::OnClientRemoveRowProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_SWAP_ROW, this, &NFGameServerNet_ServerModule::OnClientSwapRowProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_RECORD_INT, this, &NFGameServerNet_ServerModule::OnClientRecordIntProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_RECORD_FLOAT, this, &NFGameServerNet_ServerModule::OnClientRecordFloatProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_RECORD_STRING, this, &NFGameServerNet_ServerModule::OnClientRecordStringProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_RECORD_OBJECT, this, &NFGameServerNet_ServerModule::OnClientRecordObjectProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_RECORD_VECTOR2, this, &NFGameServerNet_ServerModule::OnClientRecordVector2Process);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_RECORD_VECTOR3, this, &NFGameServerNet_ServerModule::OnClientRecordVector3Process);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_ADD_ROW, this, &NFGameServerNet_ServerModule::OnClientAddRowProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_REMOVE_ROW, this, &NFGameServerNet_ServerModule::OnClientRemoveRowProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_SWAP_ROW, this, &NFGameServerNet_ServerModule::OnClientSwapRowProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_RECORD_INT, this, &NFGameServerNet_ServerModule::OnClientRecordIntProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_RECORD_FLOAT, this, &NFGameServerNet_ServerModule::OnClientRecordFloatProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_RECORD_STRING, this, &NFGameServerNet_ServerModule::OnClientRecordStringProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_RECORD_OBJECT, this, &NFGameServerNet_ServerModule::OnClientRecordObjectProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_RECORD_VECTOR2, this, &NFGameServerNet_ServerModule::OnClientRecordVector2Process);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_RECORD_VECTOR3, this, &NFGameServerNet_ServerModule::OnClientRecordVector3Process);
 
 	//EGMI_ACK_RECORD_CLEAR = 228,
 	//EGMI_ACK_RECORD_SORT = 229,
 
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_CREATE_CLAN, this, &NFGameServerNet_ServerModule::OnClanTransWorld);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_JOIN_CLAN, this, &NFGameServerNet_ServerModule::OnClanTransWorld);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_LEAVE_CLAN, this, &NFGameServerNet_ServerModule::OnClanTransWorld);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_OPR_CLAN, this, &NFGameServerNet_ServerModule::OnClanTransWorld);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_SEARCH_CLAN, this, &NFGameServerNet_ServerModule::OnClanTransWorld);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_MOVE, this, &NFGameServerNet_ServerModule::OnClientReqMoveProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_MOVE_IMMUNE, this, &NFGameServerNet_ServerModule::OnClientReqMoveImmuneProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_POS_SYNC, this, &NFGameServerNet_ServerModule::OnClientReqPosSyncProcess);
 
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGEC_REQ_CREATE_CHATGROUP, this, &NFGameServerNet_ServerModule::OnTransWorld);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGEC_REQ_JOIN_CHATGROUP, this, &NFGameServerNet_ServerModule::OnTransWorld);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGEC_REQ_LEAVE_CHATGROUP, this, &NFGameServerNet_ServerModule::OnTransWorld);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGEC_REQ_SUBSCRIPTION_CHATGROUP, this, &NFGameServerNet_ServerModule::OnTransWorld);
-
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_MOVE, this, &NFGameServerNet_ServerModule::OnClientReqMoveProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_MOVE_IMMUNE, this, &NFGameServerNet_ServerModule::OnClientReqMoveImmuneProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_STATE_SYNC, this, &NFGameServerNet_ServerModule::OnClientReqStateSyncProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_POS_SYNC, this, &NFGameServerNet_ServerModule::OnClientReqPosSyncProcess);
-
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGEC_REQ_LAG_TEST, this, &NFGameServerNet_ServerModule::OnLagTestProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_LAG_TEST, this, &NFGameServerNet_ServerModule::OnLagTestProcess);
 
 	m_pNetModule->AddEventCallBack(this, &NFGameServerNet_ServerModule::OnSocketPSEvent);
 
@@ -119,13 +105,12 @@ bool NFGameServerNet_ServerModule::AfterInit()
 				const int nCpus = m_pElementModule->GetPropertyInt32(strId, NFrame::Server::CpuCount());
 				//const std::string& strName = m_pElementModule->GetPropertyString(strId, NFrame::Server::ID());
 				//const std::string& strIP = m_pElementModule->GetPropertyString(strId, NFrame::Server::IP());
-
 				int nRet = m_pNetModule->Initialization(nMaxConnect, nPort, nCpus);
 				if (nRet < 0)
 				{
 					std::ostringstream strLog;
 					strLog << "Cannot init server net, Port = " << nPort;
-					m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+					m_pLogModule->LogError(NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
 					NFASSERT(nRet, "Cannot init server net", __FILE__, __FUNCTION__);
 					exit(0);
 				}
@@ -151,22 +136,22 @@ void NFGameServerNet_ServerModule::OnSocketPSEvent(const NFSOCK nSockIndex, cons
 {
 	if (eEvent & NF_NET_EVENT_EOF)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_EOF", "Connection closed", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_EOF Connection closed", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else if (eEvent & NF_NET_EVENT_ERROR)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_ERROR", "Got an error on the connection", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_ERROR Got an error on the connection", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else if (eEvent & NF_NET_EVENT_TIMEOUT)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_TIMEOUT", "read timeout", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_TIMEOUT read timeout", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else  if (eEvent & NF_NET_EVENT_CONNECTED)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED", "connected success", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED connected success", __FUNCTION__, __LINE__);
 		OnClientConnected(nSockIndex);
 	}
 }
@@ -194,87 +179,7 @@ void NFGameServerNet_ServerModule::OnClientConnected(const NFSOCK nAddress)
 
 }
 
-void NFGameServerNet_ServerModule::OnClientEnterGameProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg,
-                                                             const uint32_t nLen)
-{
-	NFGUID nClientID;
-	NFMsg::ReqEnterGameServer xMsg;
-	if (!m_pNetModule->ReceivePB( nMsgID, msg, nLen, xMsg, nClientID))
-	{
-		return;
-	}
-
-	NFGUID nRoleID = NFINetModule::PBToNF(xMsg.id());
-
-	if (m_pKernelModule->GetObject(nRoleID))
-	{
-		//it should be rebind with proxy's netobject
-		m_pKernelModule->DestroyObject(nRoleID);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-
-	NF_SHARE_PTR<NFIGameServerNet_ServerModule::GateBaseInfo>  pGateInfo = GetPlayerGateInfo(nRoleID);
-	if (nullptr != pGateInfo)
-	{
-		RemovePlayerGateInfo(nRoleID);
-	}
-
-	NF_SHARE_PTR<NFIGameServerNet_ServerModule::GateServerInfo> pGateServerinfo = GetGateServerInfoBySockIndex(nSockIndex);
-	if (nullptr == pGateServerinfo)
-	{
-		return;
-	}
-
-	int nGateID = -1;
-	if (pGateServerinfo->xServerData.pData)
-	{
-		nGateID = pGateServerinfo->xServerData.pData->server_id();
-	}
-
-	if (nGateID < 0)
-	{
-		return;
-	}
-
-	if (!AddPlayerGateInfo(nRoleID, nClientID, nGateID))
-	{
-		return;
-	}
-
-	int nSceneID = 1;
-	NFDataList var;
-	var.AddString(NFrame::Player::Name());
-	var.AddString(xMsg.name());
-
-	var.AddString(NFrame::Player::GateID());
-	var.AddInt(nGateID);
-
-	var.AddString(NFrame::Player::GameID());
-	var.AddInt(pPluginManager->GetAppID());
-
-	NF_SHARE_PTR<NFIObject> pObject = m_pKernelModule->CreateObject(nRoleID, nSceneID, 0, NFrame::Player::ThisName(), "", var);
-	if (NULL == pObject)
-	{
-		//mRoleBaseData
-		//mRoleFDData
-		return;
-	}
-
-	const NFVector3& pos = pObject->GetPropertyVector3(NFrame::IObject::Position());
-	if (!pos.IsZero())
-	{
-		m_pSceneModule->RequestEnterScene(pObject->Self(), nSceneID, 1, 0, pos, NFDataList());
-	}
-	else
-	{
-		const NFVector3& pos = m_pSceneModule->GetRelivePosition(nSceneID, 0);
-		m_pSceneModule->RequestEnterScene(pObject->Self(), nSceneID, 1, 0, pos, NFDataList());
-	}
-}
-
-void NFGameServerNet_ServerModule::OnClientLeaveGameProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg,
-                                                             const uint32_t nLen)
+void NFGameServerNet_ServerModule::OnClientLeaveGameProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg, const uint32_t nLen)
 {
 	NFGUID nPlayerID;
 	NFMsg::ReqLeaveGameServer xMsg;
@@ -288,110 +193,25 @@ void NFGameServerNet_ServerModule::OnClientLeaveGameProcess(const NFSOCK nSockIn
 		return;
 	}
 
-	if (m_pKernelModule->GetObject(nPlayerID))
-	{
-		//if the player now in the match, we wouldn't destroy him
-		//or if the player now fighting in the clan scene with other clan, we wouldn't destroy him too
-		const int sceneID = m_pKernelModule->GetPropertyInt(nPlayerID, NFrame::Player::SceneID());
-		const int groupID = m_pKernelModule->GetPropertyInt(nPlayerID, NFrame::Player::GroupID());
-		const NFGUID matchID = m_pSceneModule->GetPropertyObject(sceneID, groupID, NFrame::Group::MatchID());
-		if (matchID.IsNull())
-		{
-			m_pKernelModule->DestroyObject(nPlayerID);
-		}
-		else
-		{
-			//add schedule
-			//single mode or multi-player mode
-			//if (m_pKernelModule->GetPropertyInt(nPlayerID, NFrame::Group::MatchPlayers()) <= 1)
-			{
-				m_pKernelModule->DestroyObject(nPlayerID);
-			}
-			/*
-			else
-			{
-				m_pKernelModule->SetPropertyObject(nPlayerID, NFrame::Player::GateID(), NFGUID());
-				m_pScheduleModule->AddSchedule(nPlayerID, "DestroyPlayerOnTime", this, &NFGameServerNet_ServerModule::DestroyPlayerByTime, 100.0f, -1);
-			}
-			*/
-		}
-	}
+	m_pKernelModule->SetPropertyInt(nPlayerID, NFrame::IObject::Connection(), 0);
+
+	m_pKernelModule->DestroyObject(nPlayerID);
 
 	RemovePlayerGateInfo(nPlayerID);
-}
-
-
-void NFGameServerNet_ServerModule::OnReqRoleListProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg,
-                                                         const uint32_t nLen)
-{
-	NFGUID nClientID;
-	NFMsg::ReqRoleList xMsg;
-	if (!m_pNetModule->ReceivePB( nMsgID, msg, nLen, xMsg, nClientID))
-	{
-		return;
-	}
-
-	NFMsg::AckRoleLiteInfoList xAckRoleLiteInfoList;
-	xAckRoleLiteInfoList.set_account(xMsg.account());
-	m_pNetModule->SendMsgPB(NFMsg::EGMI_ACK_ROLE_LIST, xAckRoleLiteInfoList, nSockIndex, nClientID);
-}
-
-void NFGameServerNet_ServerModule::OnCreateRoleGameProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)
-{
-	NFGUID nClientID;
-	NFMsg::ReqCreateRole xMsg;
-	if (!m_pNetModule->ReceivePB( nMsgID, msg, nLen, xMsg, nClientID))
-	{
-		return;
-	}
-
-	NFMsg::AckRoleLiteInfoList xAckRoleLiteInfoList;
-	xAckRoleLiteInfoList.set_account(xMsg.account());
-
-	NFMsg::RoleLiteInfo* pData = xAckRoleLiteInfoList.add_char_data();
-	pData->mutable_id()->CopyFrom(NFINetModule::NFToPB(m_pKernelModule->CreateGUID()));
-	pData->set_career(xMsg.career());
-	pData->set_sex(xMsg.sex());
-	pData->set_race(xMsg.race());
-	pData->set_noob_name(xMsg.noob_name());
-	pData->set_game_id(xMsg.game_id());
-	pData->set_role_level(1);
-	pData->set_delete_time(0);
-	pData->set_reg_time(0);
-	pData->set_last_offline_time(0);
-	pData->set_last_offline_ip(0);
-	pData->set_view_record("");
-
-	m_pNetModule->SendMsgPB(NFMsg::EGMI_ACK_ROLE_LIST, xAckRoleLiteInfoList, nSockIndex, nClientID);
-}
-
-void NFGameServerNet_ServerModule::OnDeleteRoleGameProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)
-{
-	NFGUID nPlayerID;
-	NFMsg::ReqDeleteRole xMsg;
-	if (!m_pNetModule->ReceivePB( nMsgID, msg, nLen, xMsg, nPlayerID))
-	{
-		return;
-	}
-
-	NFMsg::AckRoleLiteInfoList xAckRoleLiteInfoList;
-	xAckRoleLiteInfoList.set_account(xMsg.account());
-
-	m_pNetModule->SendMsgPB(NFMsg::EGMI_ACK_ROLE_LIST, xAckRoleLiteInfoList, nSockIndex, nPlayerID);
 }
 
 void NFGameServerNet_ServerModule::OnClientEnterGameFinishProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg, const uint32_t nLen)
 {
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ReqAckEnterGameSuccess);
-	m_pKernelModule->DoEvent(nPlayerID, NFrame::Player::ThisName(), CLASS_OBJECT_EVENT::COE_CREATE_CLIENT_FINISH, NFDataList());
+	m_pKernelModule->DoEvent(nPlayerID, NFrame::Player::ThisName(), CLASS_OBJECT_EVENT::COE_CREATE_CLIENT_FINISH, NFDataList::Empty());
 	
-	m_pNetModule->SendMsgPB(NFMsg::EGMI_ACK_ENTER_GAME_FINISH, xMsg, nSockIndex, nPlayerID);
+	m_pNetModule->SendMsgPB(NFMsg::ACK_ENTER_GAME_FINISH, xMsg, nSockIndex, nPlayerID);
 }
 
 void NFGameServerNet_ServerModule::OnLagTestProcess(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
 {
 	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ReqAckLagTest);
-	this->SendMsgPBToGate(NFMsg::EGEC_ACK_GAME_LAG_TEST, xMsg, nPlayerID);
+	this->SendMsgPBToGate(NFMsg::ACK_GAME_LAG_TEST, xMsg, nPlayerID);
 }
 
 void NFGameServerNet_ServerModule::OnClientSwapSceneProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg, const uint32_t nLen)
@@ -399,178 +219,97 @@ void NFGameServerNet_ServerModule::OnClientSwapSceneProcess(const NFSOCK nSockIn
 	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ReqAckSwapScene)
 
 	const NFMsg::ESceneType sceneType = (NFMsg::ESceneType)m_pElementModule->GetPropertyInt(std::to_string(xMsg.scene_id()), NFrame::Scene::Type());
-	const int homeSceneID = m_pKernelModule->GetPropertyInt(nPlayerID, NFrame::Player::HomeSceneID());
 	const int nowSceneID = m_pKernelModule->GetPropertyInt(nPlayerID, NFrame::Player::SceneID());
 	const int nowGroupID = m_pKernelModule->GetPropertyInt(nPlayerID, NFrame::Player::GroupID());
-	const NFGUID matchID = m_pSceneModule->GetPropertyObject(nowSceneID, nowGroupID, NFrame::Group::MatchID());
 	const NFMsg::ESceneType nowSceneType = (NFMsg::ESceneType)m_pElementModule->GetPropertyInt(std::to_string(nowSceneID), NFrame::Scene::Type());
 
-	if (!matchID.IsNull()
-		&& sceneType == NFMsg::ESceneType::SCENE_HOME
-		&& xMsg.scene_id() == homeSceneID)
-	{
-		//fighting now, want to end the fight
-		const NFVector3& pos = m_pSceneModule->GetRelivePosition(homeSceneID, 0);
-		m_pSceneProcessModule->RequestEnterScene(pObject->Self(), homeSceneID, -1, 0, pos, NFDataList());
-
-		return;
-	}
 		
-	if (sceneType == NFMsg::ESceneType::SCENE_NORMAL)
+	if (sceneType == NFMsg::ESceneType::NORMAL_SCENE)
 	{
 		const NFVector3& pos = m_pSceneModule->GetRelivePosition(xMsg.scene_id(), 0);
-		m_pSceneProcessModule->RequestEnterScene(pObject->Self(), xMsg.scene_id(), 1, 0, pos, NFDataList());
+		m_pSceneProcessModule->RequestEnterScene(pObject->Self(), xMsg.scene_id(), 1, 0, pos, NFDataList::Empty());
 	}
-	
-	/*
-	if (nowSceneType == NFMsg::ESceneType::SCENE_HOME)
-	{
-		//fighting now, want to end the fight
-		const NFVector3& pos = m_pSceneModule->GetRelivePosition(homeSceneID, 0);
-		m_pSceneProcessModule->RequestEnterScene(pObject->Self(), homeSceneID, -1, pos, NFDataList());
-	}
-	else
-	{
-		if (sceneType == NFMsg::ESceneType::SCENE_HOME)
-		{
-			//
-			const NFVector3& pos = m_pSceneModule->GetRelivePosition(xMsg.scene_id(), 0);
-			m_pSceneProcessModule->RequestEnterScene(pObject->Self(), xMsg.scene_id(), -1, pos, NFDataList());
-		}
-	}
-	*/
 }
 
 void NFGameServerNet_ServerModule::OnClientReqMoveProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg,  const uint32_t nLen)
 {
-	CLIENT_MSG_PROCESS_NO_OBJECT(nMsgID, msg, nLen, NFMsg::ReqAckPlayerMove)
+	CLIENT_MSG_PROCESS_NO_OBJECT(nMsgID, msg, nLen, NFMsg::ReqAckPlayerPosSync)
 
-
-	const NFGUID& xMover = NFINetModule::PBToNF(xMsg.mover());
-	if (xMover == nPlayerID)
+	if (xMsg.sync_unit_size() > 0)
 	{
-		const int nSceneID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::Player::SceneID());
-		const int nGroupID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::Player::GroupID());
-
-		this->SendGroupMsgPBToGate(NFMsg::EGMI_ACK_MOVE, xMsg, nSceneID, nGroupID);
-	}
-	else
-	{
-		const NFGUID xAIOwnerID = m_pKernelModule->GetPropertyObject(xMover, NFrame::NPC::AIOwnerID());
-		if (xAIOwnerID == nPlayerID)
+		NFMsg::PosSyncUnit* syncUnit = xMsg.mutable_sync_unit(0);
+		if (syncUnit)
 		{
+			const NFGUID& xMover = NFINetModule::PBToNF(syncUnit->mover());
+			if (xMover == nPlayerID)
+			{
+				const int nSceneID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::Player::SceneID());
+				const int nGroupID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::Player::GroupID());
 
-			NFMsg::Vector3 vPos = xMsg.target_pos(0);
-
-			NFVector3 v;
-			v.SetX(vPos.x());
-			v.SetY(vPos.y());
-			v.SetZ(vPos.z());
-
-			//m_pKernelModule->SetPropertyVector3(xMover, NFrame::IObject::Position(), v);
-			const int nSceneID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::Player::SceneID());
-			const int nGroupID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::Player::GroupID());
-
-			this->SendGroupMsgPBToGate(NFMsg::EGMI_ACK_MOVE, xMsg, nSceneID, nGroupID);
+				this->SendGroupMsgPBToGate(NFMsg::ACK_MOVE, xMsg, nSceneID, nGroupID);
+			}
 		}
-	}
-
-}
-
-void NFGameServerNet_ServerModule::OnClientReqMoveImmuneProcess(const NFSOCK nSockIndex, const int nMsgID,
-                                                                 const char *msg, const uint32_t nLen)
-{
-	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ReqAckPlayerMove)
-
-	const NFGUID& self = NFINetModule::PBToNF(xMsg.mover());
-	const NFGUID& xOwnerID = m_pKernelModule->GetPropertyObject(self, NFrame::NPC::AIOwnerID());
-	if (self == nPlayerID
-		|| xOwnerID == nPlayerID)
-	{
-		const int nSceneID = m_pKernelModule->GetPropertyInt32(self, NFrame::Player::SceneID());
-		const int nGroupID = m_pKernelModule->GetPropertyInt32(self, NFrame::Player::GroupID());
-
-		if (xMsg.target_pos_size() > 0)
-		{
-			NFMsg::Vector3 vPos = xMsg.target_pos(0);
-
-			NFVector3 v;
-			v.SetX(vPos.x());
-			v.SetY(vPos.y());
-			v.SetZ(vPos.z());
-
-			m_pKernelModule->SetPropertyVector3(self, NFrame::IObject::Position(), v);
-		}
-
-
-		this->SendGroupMsgPBToGate(NFMsg::EGMI_ACK_MOVE_IMMUNE, xMsg, nSceneID, nGroupID);
 	}
 }
 
-void NFGameServerNet_ServerModule::OnClientReqStateSyncProcess(const NFSOCK nSockIndex, const int nMsgID,
-                                                                const char *msg, const uint32_t nLen)
+void NFGameServerNet_ServerModule::OnClientReqMoveImmuneProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg, const uint32_t nLen)
 {
-	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ReqAckPlayerMove)
-	//only the player can send the message to the back-end
-	//the monter use the require move message to sync the position between different view
-	const NFGUID& xMover = NFINetModule::PBToNF(xMsg.mover());
-	if (xMover != nPlayerID)
+	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ReqAckPlayerPosSync)
+
+	if (xMsg.sync_unit_size() > 0)
 	{
-		//const NFGUID xMasterID = m_pKernelModule->GetPropertyObject(xMover, NFrame::NPC::MasterID());
-		//if (xMasterID != nPlayerID)
-		//{
-		//	m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, xMover, "Message come from player ", nPlayerID.ToString());
-		//	return;
-		//}
-		return;
+		NFMsg::PosSyncUnit *syncUnit = xMsg.mutable_sync_unit(0);
+		if (syncUnit)
+		{
+			const NFGUID &xMover = NFINetModule::PBToNF(syncUnit->mover());
+			if (xMover == nPlayerID)
+			{
+				NFVector3 v;
+				v.SetX(syncUnit->pos().x());
+				v.SetY(syncUnit->pos().y());
+				v.SetZ(syncUnit->pos().z());
+
+				m_pKernelModule->SetPropertyVector3(nPlayerID, NFrame::IObject::Position(), v);
+			}
+
+			const int nSceneID = m_pKernelModule->GetPropertyInt32(nPlayerID, NFrame::Player::SceneID());
+			const int nGroupID = m_pKernelModule->GetPropertyInt32(nPlayerID, NFrame::Player::GroupID());
+			this->SendGroupMsgPBToGate(NFMsg::ACK_MOVE_IMMUNE, xMsg, nSceneID, nGroupID);
+		}
 	}
-
-	const int nSceneID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::IObject::SceneID());
-	const int nGroupID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::IObject::GroupID());
-
-	if (xMsg.target_pos_size() > 0)
-	{
-		NFMsg::Vector3 vPos = xMsg.target_pos(0);
-
-		NFVector3 v;
-		v.SetX(vPos.x());
-		v.SetY(vPos.y());
-		v.SetZ(vPos.z());
-
-		m_pKernelModule->SetPropertyVector3(xMover, NFrame::IObject::Position(), v);
-	}
-
-	this->SendGroupMsgPBToGate(NFMsg::EGMI_ACK_STATE_SYNC, xMsg, nSceneID, nGroupID);
 }
 
 void NFGameServerNet_ServerModule::OnClientReqPosSyncProcess(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
 {
 	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ReqAckPlayerPosSync)
-	//only the player can send the message to the back-end
-	//the monter use the require move message to sync the position between different view
-	const NFGUID& xMover = NFINetModule::PBToNF(xMsg.mover());
-	if (xMover != nPlayerID)
+	//only the player can send this message to the back-end
+
+	if (xMsg.sync_unit_size() > 0)
 	{
-		const NFGUID xMasterID = m_pKernelModule->GetPropertyObject(xMover, NFrame::NPC::MasterID());
-		if (xMasterID != nPlayerID)
+		const NFMsg::PosSyncUnit& syncUnit = xMsg.sync_unit(0);
+		const NFGUID& xMover = NFINetModule::PBToNF(syncUnit.mover());
+		if (xMover != nPlayerID)
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, xMover, "Message come from player ", nPlayerID.ToString());
+			const NFGUID xMasterID = m_pKernelModule->GetPropertyObject(xMover, NFrame::NPC::MasterID());
+			if (xMasterID != nPlayerID)
+			{
+				m_pLogModule->LogError(xMover, "Message come from player " + nPlayerID.ToString());
+				return;
+			}
 			return;
 		}
-		return;
+
+		NFVector3 v;
+		v.SetX(syncUnit.pos().x());
+		v.SetY(syncUnit.pos().y());
+		v.SetZ(syncUnit.pos().z());
+
+		m_pKernelModule->SetPropertyVector3(xMover, NFrame::IObject::Position(), v);
+
+		const int nSceneID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::IObject::SceneID());
+		const int nGroupID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::IObject::GroupID());
+		this->SendGroupMsgPBToGate(NFMsg::ACK_POS_SYNC, xMsg, nSceneID, nGroupID);
 	}
-
-	const int nSceneID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::IObject::SceneID());
-	const int nGroupID = m_pKernelModule->GetPropertyInt32(xMover, NFrame::IObject::GroupID());
-
-	NFVector3 v;
-	v.SetX(xMsg.position().x());
-	v.SetY(xMsg.position().y());
-	v.SetZ(xMsg.position().z());
-
-	m_pKernelModule->SetPropertyVector3(xMover, NFrame::IObject::Position(), v);
-
-	this->SendGroupMsgPBToGate(NFMsg::EGMI_ACK_POS_SYNC, xMsg, nSceneID, nGroupID);
 }
 
 void NFGameServerNet_ServerModule::OnClientPropertyIntProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)
@@ -578,7 +317,11 @@ void NFGameServerNet_ServerModule::OnClientPropertyIntProcess(const NFSOCK nSock
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectPropertyInt)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	for (int i = 0; i < xMsg.property_list_size(); i++)
 	{
@@ -586,21 +329,19 @@ void NFGameServerNet_ServerModule::OnClientPropertyIntProcess(const NFSOCK nSock
 		NF_SHARE_PTR<NFIProperty> pProperty = pObject->GetPropertyManager()->GetElement(xPropertyInt.property_name());
 		if (pProperty)
 		{
-			//judge upload then set value
-			//GM
 			if (pProperty->GetUpload() || nGMLevel > 0)
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client int set " + xPropertyInt.property_name(), xPropertyInt.data(), __FUNCTION__, __LINE__);
-				pProperty->SetInt(xPropertyInt.data());
+				m_pLogModule->LogInfo(NFINetModule::PBToNF(xMsg.player_id()), "Upload From Client int set " + xPropertyInt.property_name() + std::to_string(xPropertyInt.data()), __FUNCTION__, __LINE__);
+				m_pKernelModule->SetPropertyInt(NFINetModule::PBToNF(xMsg.player_id()), xPropertyInt.property_name(), xPropertyInt.data());
 			}
 			else
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client int set Upload error", xPropertyInt.property_name(), __FUNCTION__, __LINE__);
+				m_pLogModule->LogError(nPlayerID, "Upload From Client int set Upload error " + xPropertyInt.property_name(), __FUNCTION__, __LINE__);
 			}
 		}
 		else
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client int set Property error", xPropertyInt.property_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogError(nPlayerID, "Upload From Client int set Property error " + xPropertyInt.property_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -610,7 +351,11 @@ void NFGameServerNet_ServerModule::OnClientPropertyFloatProcess(const NFSOCK nSo
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectPropertyFloat)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	for (int i = 0; i < xMsg.property_list_size(); i++)
 	{
@@ -621,17 +366,17 @@ void NFGameServerNet_ServerModule::OnClientPropertyFloatProcess(const NFSOCK nSo
 			//judge upload then set value
 			if (pProperty->GetUpload() || nGMLevel > 0)
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client float set " + xPropertyFloat.property_name(), xPropertyFloat.data(), __FUNCTION__, __LINE__);
-				pProperty->SetFloat(xPropertyFloat.data());
+				m_pLogModule->LogInfo(NFINetModule::PBToNF(xMsg.player_id()), "Upload From Client float set " + xPropertyFloat.property_name() + std::to_string(xPropertyFloat.data()), __FUNCTION__, __LINE__);
+				m_pKernelModule->SetPropertyFloat(NFINetModule::PBToNF(xMsg.player_id()), xPropertyFloat.property_name(), xPropertyFloat.data());
 			}
 			else
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client float set Upload error", xPropertyFloat.property_name(), __FUNCTION__, __LINE__);
+				m_pLogModule->LogError(nPlayerID, "Upload From Client float set Upload error " + xPropertyFloat.property_name(), __FUNCTION__, __LINE__);
 			}
 		}
 		else
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client float set Property error", xPropertyFloat.property_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogError(nPlayerID, "Upload From Client float set Property error " + xPropertyFloat.property_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -641,7 +386,11 @@ void NFGameServerNet_ServerModule::OnClientPropertyStringProcess(const NFSOCK nS
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectPropertyString)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	for (int i = 0; i < xMsg.property_list_size(); i++)
 	{
@@ -652,17 +401,17 @@ void NFGameServerNet_ServerModule::OnClientPropertyStringProcess(const NFSOCK nS
 			//judge upload then set value
 			if (pProperty->GetUpload() || nGMLevel > 0)
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client string set " + xPropertyString.property_name(), xPropertyString.data(), __FUNCTION__, __LINE__);
-				pProperty->SetString(xPropertyString.data());
+				m_pLogModule->LogInfo(NFINetModule::PBToNF(xMsg.player_id()), "Upload From Client string set " + xPropertyString.property_name() + " " + xPropertyString.data(), __FUNCTION__, __LINE__);
+				m_pKernelModule->SetPropertyString(NFINetModule::PBToNF(xMsg.player_id()), xPropertyString.property_name(), xPropertyString.data());
 			}
 			else
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client string set Upload error", xPropertyString.property_name(), __FUNCTION__, __LINE__);
+				m_pLogModule->LogError(nPlayerID, "Upload From Client string set Upload error " + xPropertyString.property_name(), __FUNCTION__, __LINE__);
 			}
 		}
 		else
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client string set Property error", xPropertyString.property_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogError(nPlayerID, "Upload From Client string set Property error" + xPropertyString.property_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -672,7 +421,11 @@ void NFGameServerNet_ServerModule::OnClientPropertyObjectProcess(const NFSOCK nS
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectPropertyObject)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	for (int i = 0; i < xMsg.property_list_size(); i++)
 	{
@@ -684,17 +437,17 @@ void NFGameServerNet_ServerModule::OnClientPropertyObjectProcess(const NFSOCK nS
 			if (pProperty->GetUpload() || nGMLevel > 0)
 			{
 				NFGUID xID = NFINetModule::PBToNF(xPropertyObject.data());
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client object set " + xPropertyObject.property_name(), xID.ToString(), __FUNCTION__, __LINE__);
-				pProperty->SetObject(xID);
+				m_pLogModule->LogInfo(NFINetModule::PBToNF(xMsg.player_id()), "Upload From Client object set " + xPropertyObject.property_name() + " " + xID.ToString(), __FUNCTION__, __LINE__);
+				m_pKernelModule->SetPropertyObject(NFINetModule::PBToNF(xMsg.player_id()), xPropertyObject.property_name(), xID);
 			}
 			else
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client object set Upload error", xPropertyObject.property_name(), __FUNCTION__, __LINE__);
+				m_pLogModule->LogError(nPlayerID, "Upload From Client object set Upload error " + xPropertyObject.property_name(), __FUNCTION__, __LINE__);
 			}
 		}
 		else
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client object set Property error", xPropertyObject.property_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogError(nPlayerID, "Upload From Client object set Property error " + xPropertyObject.property_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -705,7 +458,10 @@ void NFGameServerNet_ServerModule::OnClientPropertyVector2Process(const NFSOCK n
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectPropertyVector2)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
 
 	for (int i = 0; i < xMsg.property_list_size(); i++)
 	{
@@ -717,17 +473,17 @@ void NFGameServerNet_ServerModule::OnClientPropertyVector2Process(const NFSOCK n
 			if (pProperty->GetUpload() || nGMLevel > 0)
 			{
 				NFVector2 vVec2 = NFINetModule::PBToNF(xProperty.data());
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client object set " + xProperty.property_name(), vVec2.ToString(), __FUNCTION__, __LINE__);
-				pProperty->SetVector2(vVec2);
+				m_pLogModule->LogInfo(NFINetModule::PBToNF(xMsg.player_id()), "Upload From Client object set " + xProperty.property_name() + " " + vVec2.ToString(), __FUNCTION__, __LINE__);
+				m_pKernelModule->SetPropertyVector2(NFINetModule::PBToNF(xMsg.player_id()), xProperty.property_name(), vVec2);
 			}
 			else
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client object set Upload error", xProperty.property_name(), __FUNCTION__, __LINE__);
+				m_pLogModule->LogError(nPlayerID, "Upload From Client object set Upload error " + xProperty.property_name(), __FUNCTION__, __LINE__);
 			}
 		}
 		else
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client object set Property error", xProperty.property_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogError(nPlayerID, "Upload From Client object set Property error " + xProperty.property_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -737,7 +493,10 @@ void NFGameServerNet_ServerModule::OnClientPropertyVector3Process(const NFSOCK n
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectPropertyVector3)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
 
 	for (int i = 0; i < xMsg.property_list_size(); i++)
 	{
@@ -749,17 +508,17 @@ void NFGameServerNet_ServerModule::OnClientPropertyVector3Process(const NFSOCK n
 			if (pProperty->GetUpload() || nGMLevel > 0)
 			{
 				NFVector3 vVec3 = NFINetModule::PBToNF(xProperty.data());
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client object set " + xProperty.property_name(), vVec3.ToString(), __FUNCTION__, __LINE__);
-				pProperty->SetVector3(vVec3);
+				m_pLogModule->LogInfo(NFINetModule::PBToNF(xMsg.player_id()), "Upload From Client object set " + xProperty.property_name() + " " + vVec3.ToString(), __FUNCTION__, __LINE__);
+				m_pKernelModule->SetPropertyVector3(NFINetModule::PBToNF(xMsg.player_id()), xProperty.property_name(), vVec3);
 			}
 			else
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client object set Upload error", xProperty.property_name(), __FUNCTION__, __LINE__);
+				m_pLogModule->LogError(nPlayerID, "Upload From Client object set Upload error " + xProperty.property_name(), __FUNCTION__, __LINE__);
 			}
 		}
 		else
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client object set Property error", xProperty.property_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogError(nPlayerID, "Upload From Client object set Property error " + xProperty.property_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -770,12 +529,16 @@ void NFGameServerNet_ServerModule::OnClientAddRowProcess(const NFSOCK nSockIndex
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectRecordAddRow)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client add row record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client add row record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 	if (pRecord->GetUpload() || nGMLevel > 0)
@@ -824,23 +587,18 @@ void NFGameServerNet_ServerModule::OnClientAddRowProcess(const NFSOCK nSockIndex
 				}
 				else
 				{
-					m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID,
-											"Upload From Client add row record error", xMsg.record_name(), __FUNCTION__,
-											__LINE__);
+					m_pLogModule->LogInfo(nPlayerID, "Upload From Client add row record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 					return;
 				}
 			}
 
 			if (pRecord->AddRow(row, xDataList) >= 0)
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client add row record",
-										xMsg.record_name(), __FUNCTION__, __LINE__);
+				m_pLogModule->LogInfo(nPlayerID, "Upload From Client add row record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 			}
 			else
 			{
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID,
-										"Upload From Client add row record error", xMsg.record_name(), __FUNCTION__,
-										__LINE__);
+				m_pLogModule->LogInfo(nPlayerID, "Upload From Client add row record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 			}
 		}
 	}
@@ -851,12 +609,16 @@ void NFGameServerNet_ServerModule::OnClientRemoveRowProcess(const NFSOCK nSockIn
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectRecordRemove)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client remove row record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client remove row record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 
@@ -866,15 +628,11 @@ void NFGameServerNet_ServerModule::OnClientRemoveRowProcess(const NFSOCK nSockIn
         {
 			if (pRecord->Remove(xMsg.remove_row().Get(i)))
             {
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID,
-										"Upload From Client remove row record", xMsg.record_name(), __FUNCTION__,
-										__LINE__);
+				m_pLogModule->LogInfo(nPlayerID, "Upload From Client remove row record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 			}
 			else
             {
-				m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID,
-										"Upload From Client remove row record error", xMsg.record_name(), __FUNCTION__,
-										__LINE__);
+				m_pLogModule->LogInfo(nPlayerID, "Upload From Client remove row record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 			}
 		}
 	}
@@ -886,13 +644,17 @@ void NFGameServerNet_ServerModule::OnClientSwapRowProcess(const NFSOCK nSockInde
 
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.origin_record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client swap row record error", xMsg.origin_record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client swap row record error " + xMsg.origin_record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 	if (!pRecord->GetUpload() || nGMLevel > 0)
@@ -900,21 +662,11 @@ void NFGameServerNet_ServerModule::OnClientSwapRowProcess(const NFSOCK nSockInde
 
 		if (pRecord->SwapRowInfo(xMsg.row_origin(), xMsg.row_target()))
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL,
-									nPlayerID,
-									"Upload From Client swap row record",
-									xMsg.origin_record_name(),
-									__FUNCTION__,
-									__LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client swap row record " + xMsg.origin_record_name(), __FUNCTION__, __LINE__);
 		}
 		else
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL,
-									nPlayerID,
-									"Upload From Client swap row record error",
-									xMsg.origin_record_name(),
-									__FUNCTION__,
-									__LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client swap row record error " + xMsg.origin_record_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -926,12 +678,16 @@ void NFGameServerNet_ServerModule::OnClientRecordIntProcess(const NFSOCK nSockIn
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client int set record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client int set record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 
 	if (pRecord->GetUpload() || nGMLevel > 0)
@@ -941,12 +697,7 @@ void NFGameServerNet_ServerModule::OnClientRecordIntProcess(const NFSOCK nSockIn
 		{
 			const NFMsg::RecordInt &xRecordInt = xMsg.property_list().Get(i);
 			pRecord->SetInt(xRecordInt.row(), xRecordInt.col(), xRecordInt.data());
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL,
-									nPlayerID,
-									"Upload From Client int set record",
-									xMsg.record_name(),
-									__FUNCTION__,
-									__LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client int set record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		}
 	}
 
@@ -963,7 +714,7 @@ void NFGameServerNet_ServerModule::OnClientRecordFloatProcess(const NFSOCK nSock
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client float set record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client float set record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 
@@ -974,12 +725,7 @@ void NFGameServerNet_ServerModule::OnClientRecordFloatProcess(const NFSOCK nSock
 		{
 			const NFMsg::RecordFloat &xRecordFloat = xMsg.property_list().Get(i);
 			pRecord->SetFloat(xRecordFloat.row(), xRecordFloat.col(), xRecordFloat.data());
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL,
-									nPlayerID,
-									"Upload From Client float set record",
-									xMsg.record_name(),
-									__FUNCTION__,
-									__LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client float set record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		}
 	}
 	
@@ -990,12 +736,16 @@ void NFGameServerNet_ServerModule::OnClientRecordStringProcess(const NFSOCK nSoc
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectRecordString)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client String set record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client String set record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 
@@ -1006,12 +756,7 @@ void NFGameServerNet_ServerModule::OnClientRecordStringProcess(const NFSOCK nSoc
 		{
 			const NFMsg::RecordString &xRecordString = xMsg.property_list().Get(i);
 			pRecord->SetString(xRecordString.row(), xRecordString.col(), xRecordString.data());
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL,
-									nPlayerID,
-									"Upload From Client String set record",
-									xMsg.record_name(),
-									__FUNCTION__,
-									__LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client String set record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		}
 	}
 	
@@ -1023,12 +768,16 @@ void NFGameServerNet_ServerModule::OnClientRecordObjectProcess(const NFSOCK nSoc
 
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client Object set record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client Object set record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 
@@ -1039,7 +788,7 @@ void NFGameServerNet_ServerModule::OnClientRecordObjectProcess(const NFSOCK nSoc
 		{
 			const NFMsg::RecordObject &xRecordObject = xMsg.property_list().Get(i);
 			pRecord->SetObject(xRecordObject.row(), xRecordObject.col(), NFINetModule::PBToNF(xRecordObject.data()));
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client Object set record", xMsg.record_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client Object set record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -1049,12 +798,16 @@ void NFGameServerNet_ServerModule::OnClientRecordVector2Process(const NFSOCK nSo
 	CLIENT_MSG_PROCESS( nMsgID, msg, nLen, NFMsg::ObjectRecordVector2)
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client vector2 set record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client vector2 set record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 	if (pRecord->GetUpload() || nGMLevel > 0)
@@ -1063,7 +816,7 @@ void NFGameServerNet_ServerModule::OnClientRecordVector2Process(const NFSOCK nSo
 		{
 			const NFMsg::RecordVector2 &xRecordVector2 = xMsg.property_list().Get(i);
 			pRecord->SetVector2(xRecordVector2.row(), xRecordVector2.col(), NFINetModule::PBToNF(xRecordVector2.data()));
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client vector2 set record", xMsg.record_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client vector2 set record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		}
 	}
 }
@@ -1075,12 +828,16 @@ void NFGameServerNet_ServerModule::OnClientRecordVector3Process(const NFSOCK nSo
 	NF_SHARE_PTR<NFIRecord> pRecord = pObject->GetRecordManager()->GetElement(xMsg.record_name());
 	if (!pRecord)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nPlayerID, "Upload From Client vector3 set record error", xMsg.record_name(), __FUNCTION__, __LINE__);
+		m_pLogModule->LogError(nPlayerID, "Upload From Client vector3 set record error " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		return;
 	}
 
 	const std::string& strAccount = pObject->GetPropertyString(NFrame::Player::Account());
-	const int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+	int nGMLevel = m_pElementModule->GetPropertyInt(strAccount, NFrame::GM::Level());
+#ifdef NF_DEBUG_MODE
+	nGMLevel = 1;
+#endif
+
 
 	if (pRecord->GetUpload() || nGMLevel > 0)
 	{
@@ -1089,25 +846,9 @@ void NFGameServerNet_ServerModule::OnClientRecordVector3Process(const NFSOCK nSo
 		{
 			const NFMsg::RecordVector3 &xRecordVector3 = xMsg.property_list().Get(i);
 			pRecord->SetVector3(xRecordVector3.row(), xRecordVector3.col(), NFINetModule::PBToNF(xRecordVector3.data()));
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, nPlayerID, "Upload From Client vector3 set record", xMsg.record_name(), __FUNCTION__, __LINE__);
+			m_pLogModule->LogInfo(nPlayerID, "Upload From Client vector3 set record " + xMsg.record_name(), __FUNCTION__, __LINE__);
 		}
 	}
-}
-
-int NFGameServerNet_ServerModule::DestroyPlayerByTime(const NFGUID & self, const std::string & name, const float fIntervalTime, const int nCount)
-{
-	const int nSceneID = m_pKernelModule->GetPropertyInt(self, NFrame::Player::SceneID());
-	const int nGroupID = m_pKernelModule->GetPropertyInt(self, NFrame::Player::GroupID());
-	const NFGUID gateID = m_pKernelModule->GetPropertyObject(self, NFrame::Player::GateID());
-
-	const NFGUID& matchID = m_pSceneModule->GetPropertyObject(nSceneID, nGroupID, NFrame::Group::MatchID());
-
-	if (matchID.IsNull() && gateID.IsNull())
-	{
-		m_pKernelModule->DestroyObject(self);
-	}
-
-	return 0;
 }
 
 void NFGameServerNet_ServerModule::OnProxyServerRegisteredProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)
@@ -1132,7 +873,7 @@ void NFGameServerNet_ServerModule::OnProxyServerRegisteredProcess(const NFSOCK n
 		pServerData->xServerData.nFD = nSockIndex;
 		*(pServerData->xServerData.pData) = xData;
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "Proxy Registered");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "Proxy Registered");
 	}
 
 	return;
@@ -1153,7 +894,7 @@ void NFGameServerNet_ServerModule::OnProxyServerUnRegisteredProcess(const NFSOCK
 		mProxyMap.RemoveElement(xData.server_id());
 
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "Proxy UnRegistered");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "Proxy UnRegistered");
 	}
 
 	return;
@@ -1181,7 +922,7 @@ void NFGameServerNet_ServerModule::OnRefreshProxyServerInfoProcess(const NFSOCK 
 		pServerData->xServerData.nFD = nSockIndex;
 		*(pServerData->xServerData.pData) = xData;
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "Proxy Registered");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "Proxy Registered");
 	}
 
 	return;
@@ -1290,7 +1031,7 @@ bool NFGameServerNet_ServerModule::AddPlayerGateInfo(const NFGUID& nRoleID, cons
     if (nullptr != pBaseData)
     {
         
-        m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, nClientID, "player is exist, cannot enter game", "", __FUNCTION__, __LINE__);
+        m_pLogModule->LogError(nClientID, "player is exist, cannot enter game", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -1379,51 +1120,3 @@ void NFGameServerNet_ServerModule::OnTransWorld(const NFSOCK nSockIndex, const i
 
 	m_pNetClientModule->SendBySuitWithOutHead(NF_SERVER_TYPES::NF_ST_WORLD, nHasKey, nMsgID, std::string(msg, nLen));
 }
-
-void NFGameServerNet_ServerModule::OnClanTransWorld(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)
-{
-	switch (nMsgID)
-	{
-		case NFMsg::EGMI_REQ_CREATE_CLAN:
-		case NFMsg::EGMI_REQ_JOIN_CLAN:
-		{
-			std::string strMsg;
-			NFGUID nPlayer;
-			if (NFINetModule::ReceivePB(nMsgID, msg, nLen, strMsg, nPlayer) && !nPlayer.IsNull())
-			{
-				NFGUID xClanID = m_pKernelModule->GetPropertyObject(nPlayer, NFrame::Player::Clan_ID());
-				if (xClanID.IsNull())
-				{
-					int nHashKey = nPlayer.nHead64;
-					m_pNetClientModule->SendBySuitWithOutHead(NF_SERVER_TYPES::NF_ST_WORLD, nHashKey, nMsgID, std::string(msg, nLen));
-				}
-			}
-		}
-			break;
-		case NFMsg::EGMI_REQ_LEAVE_CLAN:
-		case NFMsg::EGMI_REQ_OPR_CLAN:
-		{
-
-		}
-			break;
-		case NFMsg::EGMI_REQ_SEARCH_CLAN:
-		{
-
-		}
-			break;
-		default:
-			break;
-	}
-
-	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ObjectRecordVector2)
-
-	std::string strMsg;
-	NFGUID nPlayer;
-	int nHasKey = 0;
-	if (NFINetModule::ReceivePB(nMsgID, msg, nLen, strMsg, nPlayer))
-	{
-		nHasKey = nPlayer.nData64;
-		m_pNetClientModule->SendBySuitWithOutHead(NF_SERVER_TYPES::NF_ST_WORLD, nHasKey, nMsgID, std::string(msg, nLen));
-	}
-}
-

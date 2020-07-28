@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -75,7 +75,8 @@ bool NFRedisClient::KeepLive()
 
 bool NFRedisClient::ReConnect()
 {
-	return m_pRedisClientSocket->ReConnect(mstrIP, mnPort);
+    this->mbAuthed = false;
+    return m_pRedisClientSocket->ReConnect(mstrIP, mnPort);
 }
 
 bool NFRedisClient::IsConnect()

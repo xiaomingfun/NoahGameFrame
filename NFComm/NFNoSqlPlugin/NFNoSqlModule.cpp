@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -30,6 +30,7 @@
 NFIPluginManager* xPluginManager;
 NFNoSqlModule::NFNoSqlModule(NFIPluginManager* p)
 {
+    m_bIsExecute = true;
 	xPluginManager = p;
 	pPluginManager = p;
 }
@@ -75,14 +76,14 @@ bool NFNoSqlModule::AfterInit()
 			{
 				std::ostringstream strLog;
 				strLog << "Connected NoSqlServer[" << strIP << "], Port = [" << nPort << "], Passsword = [" << strAuth << "]";
-				m_pLogModule->LogNormal(NFILogModule::NF_LOG_LEVEL::NLL_INFO_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+				m_pLogModule->LogInfo(strLog, __FUNCTION__, __LINE__);
 
 			}
 			else
 			{
 				std::ostringstream strLog;
 				strLog << "Cannot connect NoSqlServer[" << strIP << "], Port = " << nPort << "], Passsword = [" << strAuth << "]";
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+				m_pLogModule->LogInfo(strLog, __FUNCTION__, __LINE__);
 			}
 		}
 	}

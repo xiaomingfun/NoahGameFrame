@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -152,7 +152,7 @@ bool NFLuaScriptModule::EnterScene(const int nSceneID, const int nGroupID)
 
 bool NFLuaScriptModule::DoEvent(const NFGUID & self, const int nEventID, const NFDataList & arg)
 {
-	m_pEventModule->DoEvent(self, (NFEventDefine)nEventID, arg);
+	m_pEventModule->DoEvent(self, (int)nEventID, arg);
 
 	return true;
 }
@@ -291,27 +291,27 @@ void NFLuaScriptModule::OnScriptReload()
     {
         case NF_SERVER_TYPES::NF_ST_GAME:
         {
-            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/game/script_reload.lua";
+            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/game/game_script_reload.lua";
         }
         break;
         case NF_SERVER_TYPES::NF_ST_LOGIN:
         {
-            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/login/script_reload.lua";
+            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/login/login_script_reload.lua";
         }
         break;
         case NF_SERVER_TYPES::NF_ST_WORLD:
         {
-            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/world/script_reload.lua";
+            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/world/world_script_reload.lua";
         }
         break;
         case NF_SERVER_TYPES::NF_ST_PROXY:
         {
-            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/proxy/script_reload.lua";
+            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/proxy/proxy_script_reload.lua";
         }
         break;
         case NF_SERVER_TYPES::NF_ST_MASTER:
         {
-            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/master/script_reload.lua";
+            strRootFileh = pPluginManager->GetConfigPath() + "NFDataCfg/ScriptModule/master/master_script_reload.lua";
         }
         break;
         default:
@@ -364,7 +364,7 @@ int NFLuaScriptModule::OnLuaRecordCB(const NFGUID& self, const RECORD_EVENT_DATA
     return CallLuaFuncFromMap(mxLuaRecordCallBackFuncMap, xEventData.strRecordName, self, xEventData.strRecordName, xEventData.nOpType, xEventData.nRow, xEventData.nCol, oldVar, newVar);
 }
 
-bool NFLuaScriptModule::AddEventCallBack(const NFGUID& self, const NFEventDefine nEventID, const LuaIntf::LuaRef& luatbl, const LuaIntf::LuaRef& luaFunc)
+bool NFLuaScriptModule::AddEventCallBack(const NFGUID& self, const int nEventID, const LuaIntf::LuaRef& luatbl, const LuaIntf::LuaRef& luaFunc)
 {
 	std::string luaFuncName = FindFuncName(luatbl, luaFunc);
 	if (!luaFuncName.empty())
@@ -380,7 +380,7 @@ bool NFLuaScriptModule::AddEventCallBack(const NFGUID& self, const NFEventDefine
 	return false;
 }
 
-int NFLuaScriptModule::OnLuaEventCB(const NFGUID& self, const NFEventDefine nEventID, const NFDataList& argVar)
+int NFLuaScriptModule::OnLuaEventCB(const NFGUID& self, const int nEventID, const NFDataList& argVar)
 {
     return CallLuaFuncFromMap(mxLuaEventCallBackFuncMap, (int)nEventID, self, nEventID, (NFDataList&)argVar);
 }
@@ -392,7 +392,7 @@ bool NFLuaScriptModule::AddModuleSchedule(std::string& strHeartBeatName, const L
 	{
 		if (AddLuaFuncToMap(mxLuaHeartBeatCallBackFuncMap, strHeartBeatName, luaFuncName))
 		{
-			return m_pScheduleModule->AddSchedule(strHeartBeatName, this, &NFLuaScriptModule::OnLuaHeartBeatCB, fTime, nCount);
+			return m_pScheduleModule->AddSchedule(NFGUID(), strHeartBeatName, this, &NFLuaScriptModule::OnLuaHeartBeatCB, fTime, nCount);
 		}
 	}
 

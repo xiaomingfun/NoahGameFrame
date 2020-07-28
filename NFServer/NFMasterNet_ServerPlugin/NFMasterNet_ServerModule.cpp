@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -68,7 +68,7 @@ void NFMasterNet_ServerModule::OnWorldRegisteredProcess(const NFSOCK nSockIndex,
 		pServerData->nFD = nSockIndex;
 		*(pServerData->pData) = xData;
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "WorldRegistered");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "WorldRegistered");
 	}
 
 
@@ -90,7 +90,7 @@ void NFMasterNet_ServerModule::OnWorldUnRegisteredProcess(const NFSOCK nSockInde
 		mWorldMap.RemoveElement(xData.server_id());
 
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "WorldUnRegistered");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "WorldUnRegistered");
 	}
 
 	SynWorldToLoginAndWorld();
@@ -118,7 +118,7 @@ void NFMasterNet_ServerModule::OnRefreshWorldInfoProcess(const NFSOCK nSockIndex
 		pServerData->nFD = nSockIndex;
 		*(pServerData->pData) = xData;
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "RefreshWorldInfo");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "RefreshWorldInfo");
 
 	}
 
@@ -147,7 +147,7 @@ void NFMasterNet_ServerModule::OnLoginRegisteredProcess(const NFSOCK nSockIndex,
 		pServerData->nFD = nSockIndex;
 		*(pServerData->pData) = xData;
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "LoginRegistered");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "LoginRegistered");
 	}
 
 	SynWorldToLoginAndWorld();
@@ -168,7 +168,7 @@ void NFMasterNet_ServerModule::OnLoginUnRegisteredProcess(const NFSOCK nSockInde
 
 		mLoginMap.RemoveElement(xData.server_id());
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "LoginUnRegistered");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "LoginUnRegistered");
 
 	}
 }
@@ -195,7 +195,7 @@ void NFMasterNet_ServerModule::OnRefreshLoginInfoProcess(const NFSOCK nSockIndex
 		pServerData->nFD = nSockIndex;
 		*(pServerData->pData) = xData;
 
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, xData.server_id()), xData.server_name(), "RefreshLoginInfo");
+		m_pLogModule->LogInfo(NFGUID(0, xData.server_id()), xData.server_name(), "RefreshLoginInfo");
 
 	}
 }
@@ -215,7 +215,7 @@ void NFMasterNet_ServerModule::OnSelectWorldProcess(const NFSOCK nSockIndex, con
 		return;
 	}
 
-	m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_REQ_CONNECT_WORLD, xMsg, pServerData->nFD);
+	m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::REQ_CONNECT_WORLD, xMsg, pServerData->nFD);
 }
 
 bool NFMasterNet_ServerModule::Execute()
@@ -241,21 +241,21 @@ void NFMasterNet_ServerModule::OnSelectServerResultProcess(const NFSOCK nSockInd
 	}
 
 	
-	m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_ACK_CONNECT_WORLD, xMsg, pServerData->nFD);
+	m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::ACK_CONNECT_WORLD, xMsg, pServerData->nFD);
 }
 
 bool NFMasterNet_ServerModule::AfterInit()
 {
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_STS_HEART_BEAT, this, &NFMasterNet_ServerModule::OnHeartBeat);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_WTM_WORLD_REGISTERED, this, &NFMasterNet_ServerModule::OnWorldRegisteredProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_WTM_WORLD_UNREGISTERED, this, &NFMasterNet_ServerModule::OnWorldUnRegisteredProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_WTM_WORLD_REFRESH, this, &NFMasterNet_ServerModule::OnRefreshWorldInfoProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_LTM_LOGIN_REGISTERED, this, &NFMasterNet_ServerModule::OnLoginRegisteredProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_LTM_LOGIN_UNREGISTERED, this, &NFMasterNet_ServerModule::OnLoginUnRegisteredProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_LTM_LOGIN_REFRESH, this, &NFMasterNet_ServerModule::OnRefreshLoginInfoProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_CONNECT_WORLD, this, &NFMasterNet_ServerModule::OnSelectWorldProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_ACK_CONNECT_WORLD, this, &NFMasterNet_ServerModule::OnSelectServerResultProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_STS_SERVER_REPORT, this, &NFMasterNet_ServerModule::OnServerReport);
+	m_pNetModule->AddReceiveCallBack(NFMsg::STS_HEART_BEAT, this, &NFMasterNet_ServerModule::OnHeartBeat);
+	m_pNetModule->AddReceiveCallBack(NFMsg::WTM_WORLD_REGISTERED, this, &NFMasterNet_ServerModule::OnWorldRegisteredProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::WTM_WORLD_UNREGISTERED, this, &NFMasterNet_ServerModule::OnWorldUnRegisteredProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::WTM_WORLD_REFRESH, this, &NFMasterNet_ServerModule::OnRefreshWorldInfoProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::LTM_LOGIN_REGISTERED, this, &NFMasterNet_ServerModule::OnLoginRegisteredProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::LTM_LOGIN_UNREGISTERED, this, &NFMasterNet_ServerModule::OnLoginUnRegisteredProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::LTM_LOGIN_REFRESH, this, &NFMasterNet_ServerModule::OnRefreshLoginInfoProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_CONNECT_WORLD, this, &NFMasterNet_ServerModule::OnSelectWorldProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::ACK_CONNECT_WORLD, this, &NFMasterNet_ServerModule::OnSelectServerResultProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::STS_SERVER_REPORT, this, &NFMasterNet_ServerModule::OnServerReport);
 
 	m_pNetModule->AddReceiveCallBack(this, &NFMasterNet_ServerModule::InvalidMessage);
 
@@ -285,7 +285,7 @@ bool NFMasterNet_ServerModule::AfterInit()
 				{
 					std::ostringstream strLog;
 					strLog << "Cannot init server net, Port = " << nPort;
-					m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+					m_pLogModule->LogError(NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
 					NFASSERT(nRet, "Cannot init server net", __FILE__, __FUNCTION__);
 					exit(0);
 				}
@@ -316,22 +316,22 @@ void NFMasterNet_ServerModule::OnSocketEvent(const NFSOCK nSockIndex, const NF_N
 
 	if (eEvent & NF_NET_EVENT_EOF)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_EOF", "Connection closed", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_EOF Connection closed", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else if (eEvent & NF_NET_EVENT_ERROR)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_ERROR", "Got an error on the connection", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_ERROR Got an error on the connection", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else if (eEvent & NF_NET_EVENT_TIMEOUT)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_TIMEOUT", "read timeout", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_TIMEOUT read timeout", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else  if (eEvent & NF_NET_EVENT_CONNECTED)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED", "connected success", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED connected success", __FUNCTION__, __LINE__);
 		OnClientConnected(nSockIndex);
 	}
 }
@@ -394,7 +394,7 @@ void NFMasterNet_ServerModule::SynWorldToLoginAndWorld()
 	pServerData = mLoginMap.First();
 	while (pServerData)
 	{
-		m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_STS_NET_INFO, xData, pServerData->nFD);
+		m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::STS_NET_INFO, xData, pServerData->nFD);
 
 		pServerData = mLoginMap.Next();
 	}
@@ -418,7 +418,7 @@ void NFMasterNet_ServerModule::SynWorldToLoginAndWorld()
 			}
 		}
 
-		m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_STS_NET_INFO, xWorldData, pServerData->nFD);
+		m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::STS_NET_INFO, xWorldData, pServerData->nFD);
 
 		pServerData = mWorldMap.Next();
 	}
@@ -436,21 +436,21 @@ void NFMasterNet_ServerModule::LogGameServer()
 
 	//////////////////////////////////////////////////////////////////////////
 
-	m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), "Begin Log WorldServer Info", "");
+	m_pLogModule->LogInfo(NFGUID(), "Begin Log WorldServer Info", "");
 
 	NF_SHARE_PTR<ServerData> pGameData = mWorldMap.First();
 	while (pGameData)
 	{
 		std::ostringstream stream;
 		stream << "Type: " << pGameData->pData->server_type() << " ID: " << pGameData->pData->server_id() << " State: " << NFMsg::EServerState_Name(pGameData->pData->server_state()) << " IP: " << pGameData->pData->server_ip() << " FD: " << pGameData->nFD;
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), stream);
+		m_pLogModule->LogInfo(NFGUID(), stream);
 
 		pGameData = mWorldMap.Next();
 	}
 
-	m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), "End Log WorldServer Info", "");
+	m_pLogModule->LogInfo(NFGUID(), "End Log WorldServer Info", "");
 
-	m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), "Begin Log LoginServer Info", "");
+	m_pLogModule->LogInfo(NFGUID(), "Begin Log LoginServer Info", "");
 
 	//////////////////////////////////////////////////////////////////////////
 	pGameData = mLoginMap.First();
@@ -458,12 +458,12 @@ void NFMasterNet_ServerModule::LogGameServer()
 	{
 		std::ostringstream stream;
 		stream << "Type: " << pGameData->pData->server_type() << " ID: " << pGameData->pData->server_id() << " State: " << NFMsg::EServerState_Name(pGameData->pData->server_state()) << " IP: " << pGameData->pData->server_ip() << " FD: " << pGameData->nFD;
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), stream);
+		m_pLogModule->LogInfo(NFGUID(), stream);
 
 		pGameData = mLoginMap.Next();
 	}
 
-	m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), "End Log LoginServer Info", "");
+	m_pLogModule->LogInfo(NFGUID(), "End Log LoginServer Info", "");
 
 }
 

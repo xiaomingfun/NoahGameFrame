@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: Bluesky
    
@@ -47,13 +47,13 @@ bool NFNavigationModule::Init()
 			LoadNavigation(sceneId, navigationResPath);
 
 			//const std::string& strId = strIdList[i];
-			//NFINT64 sceneId = m_pElementModule->GetPropertyManager(strId)->GetPropertyInt(NFrame::Scene::SceneID);// lexical_cast<std::string, INT16>());
-			//std::string navigationResPath = m_pElementModule->GetPropertyManager(strId)->GetPropertyString(NFrame::Scene::NavigationResPath());
+			//NFINT64 sceneId = elementModule->GetPropertyManager(strId)->GetPropertyInt(NFrame::Scene::SceneID);// lexical_cast<std::string, INT16>());
+			//std::string navigationResPath = elementModule->GetPropertyManager(strId)->GetPropertyString(NFrame::Scene::NavigationResPath());
 			//loadNavigation(sceneId, navigationResPath);
 			//std::ostringstream strLog;
 			//strLog << "strId: (" << strId.c_str() << ") is destroyed!\n";
-			//m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
-			/*m_pElementModule->
+			//m_pLogModule->LogInfo(NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+			/*elementModule->
 			int nSceneID = lexical_cast<int>(strIdList[i]);*/
 		}
 	}
@@ -96,7 +96,7 @@ bool NFNavigationModule::RemoveNavigation(NFINT64 scendId)
 
 		std::ostringstream strLog;
 		strLog << "Navigation::removeNavigation: (" << scendId << ") is destroyed!\n";
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(strLog, __FUNCTION__, __LINE__);
 		return true;
 	}
 

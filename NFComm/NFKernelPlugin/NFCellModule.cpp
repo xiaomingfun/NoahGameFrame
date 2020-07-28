@@ -3,7 +3,7 @@
 				NoahFrame
 		https://github.com/ketoo/NoahGameFrame
 
-	Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+	Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
 	File creator: lvsheng.huang
 
@@ -62,7 +62,7 @@ bool NFCellModule::AfterInit()
 			const std::string& strId = strIdList[i];
 
 			const int nServerID = m_pElementModule->GetPropertyInt32(strId, NFrame::Server::ServerID());
-			const int nCell = m_pElementModule->GetPropertyInt32(strId, NFrame::Server::Cell());
+			const int nCell = 1;//m_pElementModule->GetPropertyInt32(strId, NFrame::Server::Cell());
 			if (pPluginManager->GetAppID() == nServerID && nCell == 1)
 			{
 				bCell = true;

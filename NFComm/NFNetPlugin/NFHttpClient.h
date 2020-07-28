@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: Stonexin
    
@@ -29,7 +29,7 @@
 
 #include "NFIHttpClient.h"
 #include "NFIHttpServer.h"
-#include "NFComm/NFCore/NFException.h"
+#include "NFIHttpServer.h"
 
 #if NF_PLATFORM == NF_PLATFORM_WIN
 #include <winsock2.h>

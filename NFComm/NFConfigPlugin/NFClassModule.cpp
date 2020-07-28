@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -28,43 +28,104 @@
 #include <algorithm>
 #include "NFConfigPlugin.h"
 #include "NFClassModule.h"
+#include "NFComm/NFPluginModule/NFIThreadPoolModule.h"
 #include "Dependencies/RapidXML/rapidxml.hpp"
 #include "Dependencies/RapidXML/rapidxml_print.hpp"
 
+NFClassModule::NFClassModule()
+{
+    msConfigFileName = "NFDataCfg/Struct/LogicClass.xml";
+}
+
+NFClassModule::NFClassModule(NFIPluginManager* p)
+{
+    pPluginManager = p;
+    msConfigFileName = "NFDataCfg/Struct/LogicClass.xml";
+
+    std::cout << "Using [" << pPluginManager->GetConfigPath() + msConfigFileName << "]" << std::endl;
+
+	if (!this->mbBackup)
+	{
+		//NFIThreadPoolModule *threadPoolModule = pPluginManager->FindModule<NFIThreadPoolModule>();
+		//const int threadCount = threadPoolModule->GetThreadCount();
+		for (int i = 0; i < 10; ++i)
+		{
+			ThreadClassModule threadElement;
+			threadElement.used = false;
+			threadElement.classModule = new NFClassModule();
+			threadElement.classModule->mbBackup = true;
+			threadElement.classModule->pPluginManager = pPluginManager;
+
+			threadElement.classModule->Awake();
+			threadElement.classModule->Init();
+			threadElement.classModule->AfterInit();
+
+			mThreadClasses.push_back(threadElement);
+		}
+	}
+}
+
+NFClassModule::~NFClassModule()
+{
+    ClearAll();
+}
+
 bool NFClassModule::Awake()
 {
-	m_pElementModule = pPluginManager->FindModule<NFIElementModule>();
+    for (int i = 0; i < mThreadClasses.size(); ++i)
+	{
+		mThreadClasses[i].classModule->Awake();
+	}
 
     Load();
-	
+
 	return true;
 	
 }
 
 bool NFClassModule::Init()
 {
+	for (int i = 0; i < mThreadClasses.size(); ++i)
+	{
+		mThreadClasses[i].classModule->Awake();
+	}
     return true;
 }
 
 bool NFClassModule::Shut()
 {
+	for (int i = 0; i < mThreadClasses.size(); ++i)
+	{
+		mThreadClasses[i].classModule->Awake();
+	}
+
     ClearAll();
 
     return true;
 }
 
-NFClassModule::NFClassModule(NFIPluginManager* p)
+NFIClassModule* NFClassModule::GetThreadClassModule()
 {
-    pPluginManager = p;
+	std::thread::id threadID = std::this_thread::get_id();
 
-    msConfigFileName = "NFDataCfg/Struct/LogicClass.xml";
-   
-    std::cout << "Using [" << pPluginManager->GetConfigPath() + msConfigFileName << "]" << std::endl;
-}
+	for (int i = 0; i < mThreadClasses.size(); ++i)
+	{
+		if (mThreadClasses[i].used)
+		{
+			if (mThreadClasses[i].threadID == threadID)
+			{
+				return mThreadClasses[i].classModule;
+			}
+		}
+		else
+		{
+			mThreadClasses[i].used = true;
+			mThreadClasses[i].threadID = threadID;
+			return mThreadClasses[i].classModule;
+		}
+	}
 
-NFClassModule::~NFClassModule()
-{
-    ClearAll();
+	return nullptr;
 }
 
 NFDATA_TYPE NFClassModule::ComputerType(const char* pstrTypeName, NFData& var)
@@ -103,7 +164,7 @@ NFDATA_TYPE NFClassModule::ComputerType(const char* pstrTypeName, NFData& var)
     return TDATA_UNKNOWN;
 }
 
-bool NFClassModule::AddPropertys(rapidxml::xml_node<>* pPropertyRootNode, NF_SHARE_PTR<NFIClass> pClass)
+bool NFClassModule::AddProperties(rapidxml::xml_node<>* pPropertyRootNode, NF_SHARE_PTR<NFIClass> pClass)
 {
     for (rapidxml::xml_node<>* pPropertyNode = pPropertyRootNode->first_node(); pPropertyNode; pPropertyNode = pPropertyNode->next_sibling())
     {
@@ -293,7 +354,7 @@ bool NFClassModule::AddClassInclude(const char* pstrClassFilePath, NF_SHARE_PTR<
     rapidxml::xml_node<>* pRropertyRootNode = root->first_node("Propertys");
     if (pRropertyRootNode)
     {
-        AddPropertys(pRropertyRootNode, pClass);
+		AddProperties(pRropertyRootNode, pClass);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -432,6 +493,12 @@ bool NFClassModule::Load()
     {
         Load(attrNode, NULL);
     }
+
+	for (int i = 0; i < mThreadClasses.size(); ++i)
+	{
+		mThreadClasses[i].classModule->Load();
+	}
+
     return true;
 }
 
@@ -487,4 +554,16 @@ bool NFClassModule::DoEvent(const NFGUID& objectID, const std::string& strClassN
     }
 
     return pClass->DoEvent(objectID, eClassEvent, valueList);
+}
+
+bool NFClassModule::AfterInit()
+{
+
+
+	return true;
+}
+
+NFIClassModule *NFClassModule::GetThreadClassModule(const int index)
+{
+	return mThreadClasses[index].classModule;
 }

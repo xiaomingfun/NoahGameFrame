@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -34,7 +34,8 @@ struct RECORD_EVENT_DATA
 	enum RecordOptype
 	{
 		Add = 0,
-		Del,
+		Del,//before del
+		AfterDel,
 		Swap,
 		Create,
 		Update,
@@ -60,10 +61,10 @@ struct RECORD_EVENT_DATA
 typedef std::function<int(const NFGUID&, const RECORD_EVENT_DATA&, const NFData&, const NFData&)> RECORD_EVENT_FUNCTOR;
 typedef NF_SHARE_PTR<RECORD_EVENT_FUNCTOR> RECORD_EVENT_FUNCTOR_PTR;
 
-class _NFExport NFIRecord :public NFMemoryCounter<NFIRecord>
+class _NFExport NFIRecord :public NFMemoryCounter
 {
 public:
-    NFIRecord() : NFMemoryCounter(GET_CLASS_NAME(NFIRecord))
+    NFIRecord() : NFMemoryCounter(GET_CLASS_NAME(NFIRecord), 1)
 	{
 	}
 
@@ -135,7 +136,7 @@ public:
 	virtual int FindRowByColValue(const int nCol, const NFData& var) = 0;
 	virtual int FindInt(const int nCol, const NFINT64 value) = 0;
 	virtual int FindFloat(const int nCol, const double value) = 0;
-	virtual int FindString(const int nCol, const std::string& valuet) = 0;
+	virtual int FindString(const int nCol, const std::string& value) = 0;
 	virtual int FindObject(const int nCol, const NFGUID& value) = 0;
 	virtual int FindVector2(const int nCol, const NFVector2& value) = 0;
 	virtual int FindVector3(const int nCol, const NFVector3& value) = 0;
@@ -181,7 +182,7 @@ public:
 	virtual const bool GetUpload() = 0;
     virtual const std::string& GetName() const = 0;
 
-    virtual const NF_SHARE_PTR<NFDataList> GetInitData() const = 0;
+    virtual NF_SHARE_PTR<NFDataList> GetInitData() const = 0;
     virtual const NF_SHARE_PTR<NFDataList> GetTag() const = 0;
 
     virtual void SetSave(const bool bSave) = 0;

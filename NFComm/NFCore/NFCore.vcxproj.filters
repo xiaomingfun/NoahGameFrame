@@ -68,9 +68,6 @@
     <ClInclude Include="NFMemoryCounter.hpp">
       <Filter>Unit</Filter>
     </ClInclude>
-    <ClInclude Include="NFSingleton.hpp">
-      <Filter>Unit</Filter>
-    </ClInclude>
     <ClInclude Include="NFDataList.hpp">
       <Filter>Unit</Filter>
     </ClInclude>
@@ -104,6 +101,12 @@
     <ClInclude Include="NFQueue.hpp">
       <Filter>Unit</Filter>
     </ClInclude>
+    <ClInclude Include="NFSmartEnum.hpp">
+      <Filter>Unit</Filter>
+    </ClInclude>
+    <ClInclude Include="NFStringRingBuffer.hpp">
+      <Filter>Unit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NFException.cpp">
@@ -123,6 +126,9 @@
     </ClCompile>
     <ClCompile Include="NFRecordManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NFMemoryCounter.cpp">
+      <Filter>Unit</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

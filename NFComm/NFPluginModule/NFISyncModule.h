@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -23,20 +23,19 @@
    limitations under the License.
 */
 
+
 #ifndef NFI_SYNC_MODULE_H
 #define NFI_SYNC_MODULE_H
 
 #include <iostream>
 #include "NFIModule.h"
-#include "NFIBuffConfigModule.h"
-
 
 class NFISyncModule
     : public NFIModule
 {
-
 public:
-
+    virtual bool RequireMove(const NFGUID self, const NFVector3& pos, const int type) = 0;
+    virtual bool RequireStop(const NFGUID self) = 0;
 };
 
 #endif

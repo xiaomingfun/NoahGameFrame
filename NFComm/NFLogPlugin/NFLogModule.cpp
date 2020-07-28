@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -85,14 +85,14 @@ std::string NFLogModule::GetConfigPath(const std::string & fileName)
 NFLogModule::NFLogModule(NFIPluginManager* p)
 {
     pPluginManager = p;
+
+	el::Loggers::addFlag(el::LoggingFlag::StrictLogFileSizeCheck);
+	el::Loggers::addFlag(el::LoggingFlag::DisableApplicationAbortOnFatalLog);
 }
 
 bool NFLogModule::Awake()
 {
 	mnLogCountTotal = 0;
-
-	el::Loggers::addFlag(el::LoggingFlag::StrictLogFileSizeCheck);
-	el::Loggers::addFlag(el::LoggingFlag::DisableApplicationAbortOnFatalLog);
 
 	std::string strLogConfigName = pPluginManager->GetLogConfigName();
 	if (strLogConfigName.empty())
@@ -323,67 +323,10 @@ void NFLogModule::LogStack()
  
     
 }
-
-bool NFLogModule::LogNormal(const NF_LOG_LEVEL nll, const NFGUID ident, const std::string& strInfo, const std::string& strDesc, const char* func, int line)
-{
-    if (line > 0)
-    {
-        Log(nll, "Indent[%s] %s %s %s %d", ident.ToString().c_str(), strInfo.c_str(), strDesc.c_str(), func, line);
-    }
-    else
-    {
-        Log(nll, "Indent[%s] %s %s", ident.ToString().c_str(), strInfo.c_str(), strDesc.c_str());
-    }
-
-    return true;
-}
-
-bool NFLogModule::LogNormal(const NF_LOG_LEVEL nll, const NFGUID ident, const std::string& strInfo, const int64_t nDesc, const char* func, int line)
-{
-    if (line > 0)
-    {
-        Log(nll, "Indent[%s] %s %lld %s %d", ident.ToString().c_str(), strInfo.c_str(), nDesc, func, line);
-    }
-    else
-    {
-        Log(nll, "Indent[%s] %s %lld", ident.ToString().c_str(), strInfo.c_str(), nDesc);
-    }
-
-    return true;
-}
-
-bool NFLogModule::LogNormal(const NF_LOG_LEVEL nll, const NFGUID ident, const std::ostringstream& stream, const char* func, int line)
-{
-    if (line > 0)
-    {
-        Log(nll, "Indent[%s] %s %s %d", ident.ToString().c_str(), stream.str().c_str(), func, line);
-    }
-    else
-    {
-        Log(nll, "Indent[%s] %s", ident.ToString().c_str(), stream.str().c_str());
-    }
-
-    return true;
-}
-
-bool NFLogModule::LogNormal(const NF_LOG_LEVEL nll, const NFGUID ident, const std::string& strInfo, const char* func /*= ""*/, int line /*= 0*/)
-{
-    if (line > 0)
-    {
-        Log(nll, "Indent[%s] %s %s %d", ident.ToString().c_str(), strInfo.c_str(), func, line);
-    }
-    else
-    {
-        Log(nll, "Indent[%s] %s", ident.ToString().c_str(), strInfo.c_str());
-    }
-
-    return true;
-}
-
 bool NFLogModule::LogDebugFunctionDump(const NFGUID ident, const int nMsg, const std::string& strArg,  const char* func /*= ""*/, const int line /*= 0*/)
 {
     //#ifdef NF_DEBUG_MODE
-    LogNormal(NFILogModule::NLL_WARING_NORMAL, ident, strArg + "MsgID:", nMsg, func, line);
+    LogDebug(ident, strArg + "MsgID:" + std::to_string(nMsg), func, line);
     //#endif
     return true;
 }
@@ -433,7 +376,7 @@ bool NFLogModule::ChangeLogLevel(const std::string& strLevel)
     }
 
     el::Loggers::reconfigureAllLoggers(*pConfigurations);
-    LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), "[Log] Change log level", strLevel, __FUNCTION__, __LINE__);
+    LogInfo("[Log] Change log level as " + strLevel, __FUNCTION__, __LINE__);
     return true;
 }
 

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -23,13 +23,12 @@
    limitations under the License.
 */
 
-#ifndef NF_GAMESERVER_NETCLIENT_MODULE_H
-#define NF_GAMESERVER_NETCLIENT_MODULE_H
+#ifndef NF_GAME_SERVER_TO_WORLD_MODULE_H
+#define NF_GAME_SERVER_TO_WORLD_MODULE_H
 
 #include "NFComm/NFMessageDefine/NFMsgDefine.h"
 #include "NFComm/NFPluginModule/NFINetModule.h"
 #include "NFComm/NFPluginModule/NFINetClientModule.h"
-#include "NFComm/NFPluginModule/NFIGameServerNet_ClientModule.h"
 #include "NFComm/NFPluginModule/NFIGameServerNet_ServerModule.h"
 #include "NFComm/NFPluginModule/NFIKernelModule.h"
 #include "NFComm/NFPluginModule/NFINetModule.h"
@@ -43,6 +42,7 @@ class NFGameServerToWorldModule : public NFIGameServerToWorldModule
 public:
     NFGameServerToWorldModule(NFIPluginManager* p)
     {
+        m_bIsExecute = true;
         pPluginManager = p;
 		mLastReportTime = 0;
     }
@@ -52,6 +52,9 @@ public:
     virtual bool AfterInit();
 
     virtual void TransmitToWorld(const int nHashKey, const int nMsgID, const google::protobuf::Message& xData);
+
+	virtual void SendOnline(const NFGUID& self);
+	virtual void SendOffline(const NFGUID& self);
 
 protected:
 
@@ -65,10 +68,6 @@ protected:
     int OnObjectClassEvent(const NFGUID& self, const std::string& strClassName, const CLASS_OBJECT_EVENT eClassEvent, const NFDataList& var);
 	
 	void OnServerInfoProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen);
-
-private:
-    void SendOnline(const NFGUID& self);
-    void SendOffline(const NFGUID& self);
 
 private:
 	NFINT64 mLastReportTime;

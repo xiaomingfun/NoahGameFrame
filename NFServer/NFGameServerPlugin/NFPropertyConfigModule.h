@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -51,16 +51,26 @@ public:
     virtual bool Execute();
     virtual bool AfterInit();
 
-    virtual NFINT64 CalculateBaseValue(const int nJob, const int nLevel, const std::string& strProperty);
     virtual bool LegalLevel(const int nJob, const int nLevel);
+
+    virtual const std::string& GetInitPropertyID(const int nJob,  const int nLevel);
+
+    virtual void ClearInitPropertyData();
+
+    virtual void AddInitPropertyID(const int nJob, const int nLevel, const std::string& data);
+
+    virtual void SetEx(const bool b);
 
 protected:
     void Load();
 
+    std::map<NFGUID, std::string>& GetData();
+
 private:
-    //
-	//diffent job, diffrent PropertyID[Level->EffectData]
-	NFMapEx<int, NFMapEx<int, std::string> > mhtCoefficienData;
+    bool mbExtra = false;
+
+	//[job,Level]->ConfigID
+    std::map<NFGUID, std::string> mhtCoefficientData;
 
     NFIClassModule* m_pClassModule;
     NFIElementModule* m_pElementModule;

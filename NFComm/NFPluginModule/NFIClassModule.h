@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -66,6 +66,9 @@ public:
     virtual bool Load() = 0;
     virtual bool Save() = 0;
     virtual bool Clear() = 0;
+
+    virtual NFIClassModule* GetThreadClassModule() = 0;
+    virtual NFIClassModule* GetThreadClassModule(const int index) = 0;
 
     template<typename BaseType>
     bool AddClassCallBack(const std::string& strClassName, BaseType* pBase, int (BaseType::*handler)(const NFGUID&, const std::string&, const CLASS_OBJECT_EVENT, const NFDataList&))

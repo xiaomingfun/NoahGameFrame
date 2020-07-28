@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -35,6 +35,7 @@ bool NFLoginNet_ServerModule::Init()
 	m_pElementModule = pPluginManager->FindModule<NFIElementModule>();
 	m_pNetClientModule = pPluginManager->FindModule<NFINetClientModule>();
 	m_pLoginToMasterModule = pPluginManager->FindModule<NFILoginToMasterModule>();
+	m_pThreadPoolModule = pPluginManager->FindModule<NFIThreadPoolModule>();
 
 	return true;
 }
@@ -51,11 +52,11 @@ bool NFLoginNet_ServerModule::BeforeShut()
 
 bool NFLoginNet_ServerModule::AfterInit()
 {
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_STS_HEART_BEAT, this, &NFLoginNet_ServerModule::OnHeartBeat);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_LOGIN, this, &NFLoginNet_ServerModule::OnLoginProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_LOGOUT, this, &NFLoginNet_ServerModule::OnLogOut);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_CONNECT_WORLD, this, &NFLoginNet_ServerModule::OnSelectWorldProcess);
-	m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_WORLD_LIST, this, &NFLoginNet_ServerModule::OnViewWorldProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::STS_HEART_BEAT, this, &NFLoginNet_ServerModule::OnHeartBeat);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_LOGIN, this, &NFLoginNet_ServerModule::OnLoginProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_LOGOUT, this, &NFLoginNet_ServerModule::OnLogOut);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_CONNECT_WORLD, this, &NFLoginNet_ServerModule::OnSelectWorldProcess);
+	m_pNetModule->AddReceiveCallBack(NFMsg::REQ_WORLD_LIST, this, &NFLoginNet_ServerModule::OnViewWorldProcess);
 	m_pNetModule->AddReceiveCallBack(this, &NFLoginNet_ServerModule::InvalidMessage);
 
 	m_pNetModule->AddEventCallBack(this, &NFLoginNet_ServerModule::OnSocketClientEvent);
@@ -82,7 +83,7 @@ bool NFLoginNet_ServerModule::AfterInit()
 				{
 					std::ostringstream strLog;
 					strLog << "Cannot init server net, Port = " << nPort;
-					m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+					m_pLogModule->LogError(NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
 					NFASSERT(nRet, "Cannot init server net", __FILE__, __FUNCTION__);
 					exit(0);
 				}
@@ -107,7 +108,7 @@ int NFLoginNet_ServerModule::OnSelectWorldResultsProcess(const int nWorldID, con
 		xMsg.set_world_port(nWorldPort);
 		xMsg.set_world_key(strWorldKey);
 
-		m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_ACK_CONNECT_WORLD, xMsg, *xFD);
+		m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::ACK_CONNECT_WORLD, xMsg, *xFD);
 	}
 
 	return 0;
@@ -153,17 +154,18 @@ void NFLoginNet_ServerModule::OnLoginProcess(const NFSOCK nSockIndex, const int 
 	{
 		if (pNetObject->GetConnectKeyState() == 0)
 		{
-			int nState = 0;//successful
-			if (0 != nState)
+			//Normally, you could check the account and password is correct or not, but for our situation, it will correct by default as here is the tutorial code.
+			int loginResult = 0;//0 means successful, else means error code from account platform.
+			if (0 != loginResult)
 			{
 				std::ostringstream strLog;
 				strLog << "Check password failed, Account = " << xMsg.account() << " Password = " << xMsg.password();
-				m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, NFGUID(0, nSockIndex), strLog, __FUNCTION__, __LINE__);
+				m_pLogModule->LogError(NFGUID(0, nSockIndex), strLog, __FUNCTION__, __LINE__);
 
 				NFMsg::AckEventResult xMsg;
-				xMsg.set_event_code(NFMsg::EGEC_ACCOUNTPWD_INVALID);
+				xMsg.set_event_code(NFMsg::ACCOUNTPWD_INVALID);
 
-				m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_ACK_LOGIN, xMsg, nSockIndex);
+				m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::ACK_LOGIN, xMsg, nSockIndex);
 				return;
 			}
 
@@ -171,11 +173,12 @@ void NFLoginNet_ServerModule::OnLoginProcess(const NFSOCK nSockIndex, const int 
 			pNetObject->SetAccount(xMsg.account());
 
 			NFMsg::AckEventResult xData;
-			xData.set_event_code(NFMsg::EGEC_ACCOUNT_SUCCESS);
+			xData.set_event_code(NFMsg::ACCOUNT_SUCCESS);
 
-			m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_ACK_LOGIN, xData, nSockIndex);
+			//The login server responds the login result to the player by sock id.
+			m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::ACK_LOGIN, xData, nSockIndex);
 
-			m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "Login successed :", xMsg.account().c_str());
+			m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "Login succeeded :", xMsg.account().c_str());
 		}
 	}
 }
@@ -207,29 +210,29 @@ void NFLoginNet_ServerModule::OnSelectWorldProcess(const NFSOCK nSockIndex, cons
 	xData.mutable_sender()->CopyFrom(NFINetModule::NFToPB(pNetObject->GetClientID()));
 	xData.set_account(pNetObject->GetAccount());
 
-	m_pNetClientModule->SendSuitByPB(NF_SERVER_TYPES::NF_ST_MASTER, pNetObject->GetAccount(), NFMsg::EGameMsgID::EGMI_REQ_CONNECT_WORLD, xData);
+	m_pNetClientModule->SendSuitByPB(NF_SERVER_TYPES::NF_ST_MASTER, pNetObject->GetAccount(), NFMsg::EGameMsgID::REQ_CONNECT_WORLD, xData);
 }
 
 void NFLoginNet_ServerModule::OnSocketClientEvent(const NFSOCK nSockIndex, const NF_NET_EVENT eEvent, NFINet* pNet)
 {
 	if (eEvent & NF_NET_EVENT_EOF)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_EOF", "Connection closed", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_EOF Connection closed", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else if (eEvent & NF_NET_EVENT_ERROR)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_ERROR", "Got an error on the connection", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_ERROR Got an error on the connection", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else if (eEvent & NF_NET_EVENT_TIMEOUT)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_TIMEOUT", "read timeout", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_TIMEOUT read timeout", __FUNCTION__, __LINE__);
 		OnClientDisconnect(nSockIndex);
 	}
 	else  if (eEvent & NF_NET_EVENT_CONNECTED)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED", "connected success", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED connected success", __FUNCTION__, __LINE__);
 		OnClientConnected(nSockIndex);
 	}
 }
@@ -254,7 +257,7 @@ void NFLoginNet_ServerModule::SynWorldToClient(const NFSOCK nFD)
 	}
 
 
-	m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::EGMI_ACK_WORLD_LIST, xData, nFD);
+	m_pNetModule->SendMsgPB(NFMsg::EGameMsgID::ACK_WORLD_LIST, xData, nFD);
 }
 
 void NFLoginNet_ServerModule::OnViewWorldProcess(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)

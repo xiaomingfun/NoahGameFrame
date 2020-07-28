@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -105,22 +105,29 @@ NFRecord::~NFRecord()
 
 std::string NFRecord::ToString()
 {
-	std::stringstream ss;
-	ss << this->GetName() << std::endl;
+    std::stringstream ss;
+    ss << this->GetName() << std::endl;
 
-	for (int i = 0; i < this->GetRows(); ++i)
-	{
-		if (IsUsed(i))
-		{
-			NFDataList rowDataList;
-			if (this->QueryRow(i, rowDataList))
-			{
-				ss << "ROW:" << i << "==>" << rowDataList.ToString() << std::endl;
-			}
-		}
-	}
+    for (int i = 0; i < this->GetRows(); ++i)
+    {
+        if (IsUsed(i))
+        {
+            NFDataList rowDataList;
+            if (this->QueryRow(i, rowDataList))
+            {
+                ss << "ROW:" << i << "==>" << rowDataList.ToString() << std::endl;
+            }
+        }
+    }
 
-	return ss.str();
+    return ss.str();
+}
+void NFRecord::ToMemoryCounterString(std::string& data)
+{
+    data.append(this->mSelf.ToString());
+    data.append(":");
+    data.append(this->GetName());
+    data.append(" ");
 }
 
 int NFRecord::GetCols() const
@@ -215,7 +222,7 @@ int NFRecord::AddRow(const int nRow, const NFDataList& var)
 	xEventData.strRecordName = mstrRecordName;
 
 	NFData tData;
-    OnEventHandler(mSelf, xEventData, tData, tData); //FIXME:RECORD
+    OnEventHandler(mSelf, xEventData, tData, tData);
 
     return nFindRow;
 }
@@ -1351,6 +1358,10 @@ bool NFRecord::Remove(const int nRow)
 
 			mVecUsedState[nRow] = 0;
 
+			xEventData.nOpType = RECORD_EVENT_DATA::AfterDel;
+
+			OnEventHandler(mSelf, xEventData, NFData(), NFData());
+
 			return true;
         }
     }
@@ -1458,7 +1469,7 @@ void NFRecord::SetName(const std::string& strName)
     mstrRecordName = strName;
 }
 
-const NF_SHARE_PTR<NFDataList> NFRecord::GetInitData() const
+NF_SHARE_PTR<NFDataList> NFRecord::GetInitData() const
 {
     NF_SHARE_PTR<NFDataList> pIniData = NF_SHARE_PTR<NFDataList>( NF_NEW NFDataList());
     pIniData->Append(*mVarRecordType);
@@ -1474,7 +1485,7 @@ void NFRecord::OnEventHandler(const NFGUID& self, const RECORD_EVENT_DATA& xEven
     {
         
         RECORD_EVENT_FUNCTOR_PTR functorPtr = *itr;
-        functorPtr.get()->operator()(self, xEventData, oldVar, newVar);
+        functorPtr->operator()(self, xEventData, oldVar, newVar);
     }
 }
 

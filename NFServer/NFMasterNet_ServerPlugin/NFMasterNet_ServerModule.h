@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -40,6 +40,7 @@ class NFMasterNet_ServerModule
 public:
     NFMasterNet_ServerModule(NFIPluginManager* p)
     {
+        m_bIsExecute = true;
 		pPluginManager = p;
         mnLastLogTime = pPluginManager->GetNowTime();
     }

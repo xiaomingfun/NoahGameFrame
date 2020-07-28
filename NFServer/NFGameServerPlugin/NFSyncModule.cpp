@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -50,33 +50,49 @@ bool NFSyncModule::Shut()
 
 bool NFSyncModule::Execute()
 {
+
+
     return true;
 }
 
 bool NFSyncModule::AfterInit()
 {
-	m_pScheduleModule->AddSchedule("NFSyncModule", this, &NFSyncModule::SyncHeart, 0.1f, -1);
 
 	m_pKernelModule->AddClassCallBack(NFrame::NPC::ThisName(), this, &NFSyncModule::OnNPCClassEvent);
 	m_pKernelModule->AddClassCallBack(NFrame::Player::ThisName(), this, &NFSyncModule::OnPlayerClassEvent);
 
 
-	if (!m_pNetModule->AddReceiveCallBack(NFMsg::EGMI_REQ_SEARCH_OPPNENT, this, &NFSyncModule::OnReqPosSyncProcess)) { return false; }
-
     return true;
 }
 
-void NFSyncModule::OnReqPosSyncProcess(const NFSOCK nSockIndex, const int nMsgID, const char *msg, const uint32_t nLen)
+bool NFSyncModule::RequireMove(const NFGUID self, const NFVector3& pos, const int type)
 {
-	CLIENT_MSG_PROCESS(nMsgID, msg, nLen, NFMsg::ReqAckPlayerPosSync);
+	RequireStop(self);
+	auto it = mPlayerPosition.find(self);
+	if (it == mPlayerPosition.end())
+	{
+		mPlayerPosition.insert(std::map<NFGUID, NFVector3>::value_type(self, pos));
+	}
 
-
-
+	return true;
 }
+
+bool NFSyncModule::RequireStop(const NFGUID self)
+{
+	auto it = mPlayerPosition.find(self);
+	if (it != mPlayerPosition.end())
+	{
+		mPlayerPosition.erase(it);
+	}
+
+	return true;
+}
+
 
 int NFSyncModule::SyncHeart(const std::string & strHeartName, const float fTime, const int nCount)
 {
-	//std::cout << strHeartName << " " << fTime << " " << nCount << std::endl;
+	//0.1s
+
 
 	return 0;
 }
@@ -85,7 +101,6 @@ int NFSyncModule::OnNPCClassEvent(const NFGUID & self, const std::string & strCl
 {
 	if (CLASS_OBJECT_EVENT::COE_CREATE_FINISH == eClassEvent)
 	{
-		m_pKernelModule->AddPropertyCallBack(self, NFrame::NPC::Position(), this, &NFSyncModule::OnNPCPositionEvent);
 	}
 
 	return 0;
@@ -100,13 +115,12 @@ int NFSyncModule::OnPlayerClassEvent(const NFGUID & self, const std::string & st
 {
 	if (CLASS_OBJECT_EVENT::COE_CREATE_FINISH == eClassEvent)
 	{
-		m_pKernelModule->AddPropertyCallBack(self, NFrame::Player::Position(), this, &NFSyncModule::OnPlayePositionPEvent);
 	}
 
 	return 0;
 }
 
-int NFSyncModule::OnPlayePositionPEvent(const NFGUID & self, const std::string & strPropertyName, const NFData & oldVar, const NFData & newVar)
+int NFSyncModule::OnPlayePositionEvent(const NFGUID & self, const std::string & strPropertyName, const NFData & oldVar, const NFData & newVar)
 {
 	return 0;
 }

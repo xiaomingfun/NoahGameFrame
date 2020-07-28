@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -35,6 +35,7 @@
 #include "NFComm/NFPluginModule/NFIElementModule.h"
 #include "NFComm/NFPluginModule/NFIClassModule.h"
 #include "NFComm/NFPluginModule/NFILoginToMasterModule.h"
+#include "NFComm/NFPluginModule/NFIThreadPoolModule.h"
 
 class NFLoginNet_ServerModule
     : public NFILoginNet_ServerModule
@@ -89,6 +90,7 @@ private:
     NFIKernelModule* m_pKernelModule;
     NFILogModule* m_pLogModule;
 	NFILoginToMasterModule* m_pLoginToMasterModule;
+    NFIThreadPoolModule* m_pThreadPoolModule;
 };
 
 #endif

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -53,8 +53,8 @@ bool NFProxyServerToGameModule::Execute()
 
 bool NFProxyServerToGameModule::AfterInit()
 {
-	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_GAME, NFMsg::EGMI_ACK_ENTER_GAME, this, &NFProxyServerToGameModule::OnAckEnterGame);
-	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_GAME, this, &NFProxyServerToGameModule::Transpond);
+	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_GAME, NFMsg::ACK_ENTER_GAME, this, &NFProxyServerToGameModule::OnAckEnterGame);
+	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_GAME, this, &NFProxyServerToGameModule::Transport);
 
 	m_pNetClientModule->AddEventCallBack(NF_SERVER_TYPES::NF_ST_GAME, this, &NFProxyServerToGameModule::OnSocketGSEvent);
 	m_pNetClientModule->ExpandBufferSize();
@@ -75,7 +75,7 @@ void NFProxyServerToGameModule::OnSocketGSEvent(const NFSOCK nSockIndex, const N
     }
     else  if (eEvent & NF_NET_EVENT_CONNECTED)
     {
-        m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED", "connected success", __FUNCTION__, __LINE__);
+        m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED connected success", __FUNCTION__, __LINE__);
         Register(pNet);
     }
 }
@@ -116,9 +116,9 @@ void NFProxyServerToGameModule::Register(NFINet* pNet)
                 if (pServerData)
                 {
                     int nTargetID = pServerData->nGameID;
-                    m_pNetClientModule->SendToServerByPB(nTargetID, NFMsg::EGameMsgID::EGMI_PTWG_PROXY_REGISTERED, xMsg);
+                    m_pNetClientModule->SendToServerByPB(nTargetID, NFMsg::EGameMsgID::PTWG_PROXY_REGISTERED, xMsg);
 
-                    m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, pData->server_id()), pData->server_name(), "Register");
+                    m_pLogModule->LogInfo(NFGUID(0, pData->server_id()), pData->server_name(), "Register");
                 }
             }
         }
@@ -138,15 +138,15 @@ void NFProxyServerToGameModule::OnAckEnterGame(const NFSOCK nSockIndex, const in
 	const NFGUID& xPlayer = NFINetModule::PBToNF(xData.event_object());
 
 	m_pProxyServerNet_ServerModule->EnterGameSuccessEvent(xClient, xPlayer);
-	m_pProxyServerNet_ServerModule->Transpond(nSockIndex, nMsgID, msg, nLen);
+	m_pProxyServerNet_ServerModule->Transport(nSockIndex, nMsgID, msg, nLen);
 }
 
 void NFProxyServerToGameModule::LogServerInfo(const std::string& strServerInfo)
 {
-    m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(), strServerInfo, "");
+    m_pLogModule->LogInfo(NFGUID(), strServerInfo, "");
 }
 
-void NFProxyServerToGameModule::Transpond(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
+void NFProxyServerToGameModule::Transport(const NFSOCK nSockIndex, const int nMsgID, const char * msg, const uint32_t nLen)
 {
-	m_pProxyServerNet_ServerModule->Transpond(nSockIndex, nMsgID, msg, nLen);
+	m_pProxyServerNet_ServerModule->Transport(nSockIndex, nMsgID, msg, nLen);
 }

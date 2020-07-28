@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -589,6 +589,13 @@ std::string NFProperty::ToString()
 	}
 
 	return strData;
+}
+
+void NFProperty::ToMemoryCounterString(std::string& data)
+{
+	data.append(this->mSelf.ToString());
+	data.append(":");
+	data.append(this->msPropertyName);
 }
 
 bool NFProperty::FromString(const std::string& strData)

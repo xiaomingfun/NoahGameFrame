@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: Stonexin
    
@@ -24,9 +24,9 @@
 */
 
 #include "NFHttpClient.h"
+#include "NFNetModule.h"
 
 #if NF_PLATFORM == NF_PLATFORM_WIN
-INITIALIZE_EASYLOGGINGPP
 #define snprintf _snprintf
 #endif
 

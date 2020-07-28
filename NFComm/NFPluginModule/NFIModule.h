@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -37,7 +37,7 @@ class NFIModule
 {
 
 public:
-    NFIModule()
+    NFIModule() : m_bIsExecute(false), pPluginManager(NULL)
     {
     }
 
@@ -99,19 +99,9 @@ public:
         return pPluginManager;
     }
 
-	virtual void YieldCo(const int64_t fSecond)
-	{
-		pPluginManager->YieldCo(fSecond);
-	}
-
-	virtual void YieldCo()
-	{
-        pPluginManager->YieldCo();
-    }
-
     std::string strName;
-
+    bool m_bIsExecute;
 protected:
-	NFIPluginManager* pPluginManager = NULL;
+	NFIPluginManager* pPluginManager;
 };
 #endif

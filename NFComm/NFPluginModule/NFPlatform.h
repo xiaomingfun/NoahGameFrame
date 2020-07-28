@@ -350,20 +350,13 @@ typedef int64_t NFSOCK;
 #endif
 #endif
 
-#if NF_PLATFORM != NF_PLATFORM_WIN
-#ifndef NF_USE_COROUTINE
-//#define NF_USE_COROUTINE 1
-#endif
-#endif
-
 //using tcmalloc
+#if NF_PLATFORM != NF_PLATFORM_WIN
+#ifndef NF_USE_TCMALLOC
 //#define NF_USE_TCMALLOC 1
+#endif
+#endif
 
-//using actor mode--begin
-#define NF_ACTOR_THREAD_COUNT 2
-#define NF_USE_ACTOR
-
-//use actor mode--end
 
 #define GET_CLASS_NAME(className) (#className)
 
@@ -414,10 +407,5 @@ inline int64_t NFGetTimeS()
     return NFGetTimeMS() / 1000;
 }
 
-//Protobuf Using Dlls
-#if NF_PLATFORM == NF_PLATFORM_WIN
-
-
-#endif
 
 #endif

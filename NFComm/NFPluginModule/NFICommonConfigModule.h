@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -27,7 +27,7 @@
 #define NFI_COMMONCONFIG_MODULE_H
 
 #include <iostream>
-#include "NFIBuffConfigModule.h"
+#include "NFIModule.h"
 
 
 class NFICommonConfigModule

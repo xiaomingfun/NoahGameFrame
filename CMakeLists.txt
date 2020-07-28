@@ -1,27 +1,14 @@
 set_property(GLOBAL PROPERTY USE_FOLDERS On)
 
-option(BUILD_TOOLS_ONLY "help string describing option")
+option(BUILD_TOOLS_ONLY "help string describing option" OFF)
+option(BUILD_MID_WARE_SDK "help string describing option" OFF)
 
 cmake_minimum_required(VERSION 2.8)
-macro(remove_file arg_list file_remove)
-	file(GLOB RemoveItems_Cpp ${file_remove})
-	if (RemoveItems_Cpp)
-		list(REMOVE_ITEM ${arg_list} ${RemoveItems_Cpp})
-	endif()
-endmacro(remove_file)
 
 macro(link_NFSDK projName)
 	add_dependencies(${projName} NFNetPlugin NFCore NFMessageDefine)
 	target_link_libraries(${projName} NFCore NFMessageDefine NFNetPlugin)
 endmacro(link_NFSDK)
-
-macro(add_post_cmd_win strProjectName destDir ext dbgSuffix)
-
-endmacro()
-
-macro(add_post_cmd_linux strProjectName destDir ext dbgSuffix dllPrefix)
-
-endmacro()
 
 project(NoahFrame)
 
@@ -47,6 +34,7 @@ if (APPLE)
 	include_directories(
 		${SolutionDir}
 		${SolutionDir}/Dependencies/
+		${SolutionDir}/Dependencies/NFMessageDefine/
 		${SolutionDir}/NFComm/NFPluginModule/
 		${SolutionDir}/Dependencies/hiredis/hiredis_linux
 		${SolutionDir}/Dependencies/vcpkg/installed/x64-osx/include/
@@ -58,6 +46,7 @@ elseif(UNIX)
 	include_directories(
 		${SolutionDir}
 		${SolutionDir}/Dependencies/
+		${SolutionDir}/Dependencies/NFMessageDefine/
 		${SolutionDir}/NFComm/NFPluginModule/
 		${SolutionDir}/Dependencies/hiredis/hiredis_linux
 		${SolutionDir}/Dependencies/vcpkg/installed/x64-linux/include/
@@ -69,6 +58,7 @@ else()
 	include_directories(
 		${SolutionDir}
 		${SolutionDir}/Dependencies/
+		${SolutionDir}/Dependencies/NFMessageDefine/
 		${SolutionDir}/NFComm/NFPluginModule/
 		${SolutionDir}/Dependencies/hiredis/hiredis_win
 		${SolutionDir}/Dependencies/vcpkg/installed/x64-windows-static/include/
@@ -110,9 +100,24 @@ endif()
 
 link_directories(${DependenciesLibPath})
 
-
-message("Build All")
-add_subdirectory(NFTools)
-add_subdirectory(Dependencies)
-add_subdirectory(NFComm)
-add_subdirectory(NFServer)
+if(${BUILD_TOOLS_ONLY} STREQUAL "ON")
+	message("Build Tools Only")
+	add_subdirectory(NFTools)
+elseif(${BUILD_MID_WARE_SDK} STREQUAL "ON")
+	add_subdirectory(NFTools)
+	message("Build SDK & MIDWARE")
+	add_subdirectory(Dependencies)
+	add_subdirectory(NFComm)
+	add_subdirectory(NFExamples)
+	add_subdirectory(NFServer)
+	add_subdirectory(../NFMidWare NFMidWare)
+	add_subdirectory(../NFComm/NFMessageDefineEx NFComm/NFMessageDefineEx)
+	add_subdirectory(../NFComm/NFServerEx NFComm/NFServerEx)
+else()
+	message("Build SDK")
+	add_subdirectory(Dependencies)
+	add_subdirectory(NFComm)
+	add_subdirectory(NFServer)
+	add_subdirectory(Tutorial)
+	add_subdirectory(NFExamples)
+endif()

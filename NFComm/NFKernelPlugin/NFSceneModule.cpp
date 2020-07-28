@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -46,7 +46,9 @@ bool NFSceneModule::Init()
 
 bool NFSceneModule::AfterInit()
 {
-	//init all scene
+	//init all scene, scene module cant create scene at Init() function as scene module depends NFIClassModule
+	//and class module will load data at Init() function.
+	//as a result, developer cant create game object at function AfterInit().
 	NF_SHARE_PTR<NFIClass> xLogicClass = m_pClassModule->GetElement(NFrame::Scene::ThisName());
 	if (xLogicClass)
 	{
@@ -152,6 +154,9 @@ int NFSceneModule::RequestGroupScene(const int nSceneID)
 
 				pSceneInfo->AddElement(nNewGroupID, pGroupInfo);
 
+				int sceneType = m_pElementModule->GetPropertyInt(std::to_string(nSceneID), NFrame::Scene::Type());
+				SceneGroupCreatedEvent(NFGUID(), nSceneID, nNewGroupID, sceneType, NFDataList::Empty());
+
 				m_pCellModule->CreateGroupCell(nSceneID, nNewGroupID);
 				return nNewGroupID;
 			}
@@ -174,7 +179,7 @@ bool NFSceneModule::RequestEnterScene(const NFGUID & self, const int nSceneID, c
 	if (nNowSceneID == nSceneID
 		&& nNowGroupID == nGroupID)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, self, "in same scene and group but it not a clone scene", nSceneID);
+		m_pLogModule->LogInfo(self, "in same scene and group but it not a clone scene " + std::to_string(nSceneID));
 
 		return false;
 	}
@@ -195,13 +200,13 @@ bool NFSceneModule::RequestEnterScene(const NFGUID & self, const int nSceneID, c
 	int nEnterConditionCode = EnterSceneCondition(self, nSceneID, nGroupID, nType, argList);
 	if (nEnterConditionCode != 0)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, self, "before enter condition code:", nEnterConditionCode);
+		m_pLogModule->LogInfo(self, "before enter condition code: " + std::to_string(nEnterConditionCode), __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	if (!SwitchScene(self, nSceneID, nGroupID, nType, pos, 0.0f, argList))
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, self, "SwitchScene failed", nSceneID);
+		m_pLogModule->LogInfo(self, "SwitchScene failed " + std::to_string(nSceneID));
 
 		return false;
 	}
@@ -219,6 +224,9 @@ bool NFSceneModule::ReleaseGroupScene(const int nSceneID, const int nGroupID)
 			DestroySceneNPC(nSceneID, nGroupID);
 
 			m_pCellModule->DestroyGroupCell(nSceneID, nGroupID);
+
+			int sceneType = m_pElementModule->GetPropertyInt(std::to_string(nSceneID), NFrame::Scene::Type());
+			SceneGroupDestroyedEvent(NFGUID(), nSceneID, nGroupID, sceneType, NFDataList::Empty());
 
 			pSceneInfo->RemoveElement(nGroupID);
 
@@ -238,26 +246,26 @@ bool NFSceneModule::LeaveSceneGroup(const NFGUID & self)
 		int nOldGroupID = pObject->GetPropertyInt32(NFrame::Scene::GroupID());
 		if (nOldGroupID <= 0)
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, self, "no this group == 0", nOldSceneID);
+			m_pLogModule->LogError(self, "no this group == 0 " + std::to_string(nOldSceneID), __FUNCTION__, __LINE__);
 			return false;
 		}
 
 		NF_SHARE_PTR<NFSceneInfo> pOldSceneInfo = this->GetElement(nOldSceneID);
 		if (!pOldSceneInfo)
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, self, "no this container", nOldSceneID);
+			m_pLogModule->LogError(self, "no this container " + std::to_string(nOldSceneID), __FUNCTION__, __LINE__);
 			return false;
 		}
 
 		if (!pOldSceneInfo->GetElement(nOldGroupID))
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, self, "no this group", nOldGroupID);
+			m_pLogModule->LogError(self, "no this group " + std::to_string(nOldGroupID), __FUNCTION__, __LINE__);
 			return false;
 		}
 		/////////
 
 		const NFVector3& lastPos = m_pKernelModule->GetPropertyVector3(self, NFrame::IObject::Position());
-		BeforeLeaveSceneGroup(self, nOldSceneID, nOldGroupID, 0, NFDataList());
+		BeforeLeaveSceneGroup(self, nOldSceneID, nOldGroupID, 0, NFDataList::Empty());
 
 		const NFGUID lastCell = m_pCellModule->ComputeCellID(lastPos);
 		OnMoveCellEvent(self, nOldSceneID, nOldGroupID, lastCell, NFGUID());
@@ -268,7 +276,7 @@ bool NFSceneModule::LeaveSceneGroup(const NFGUID & self)
 		{
 			pObject->SetPropertyInt(NFrame::Scene::GroupID(), 0);
 			/////////
-			AfterLeaveSceneGroup(self, nOldSceneID, nOldGroupID, 0, NFDataList());
+			AfterLeaveSceneGroup(self, nOldSceneID, nOldGroupID, 0, NFDataList::Empty());
 		}
 
 		return true;
@@ -289,6 +297,36 @@ bool NFSceneModule::AddSeedData(const int nSceneID, const std::string & strSeedI
 	}
 
 	return false;
+}
+
+const NFVector3& NFSceneModule::GetSeedPos(const int nSceneID, const std::string& strSeedID)
+{
+	NF_SHARE_PTR<NFSceneInfo> pSceneInfo = GetElement(nSceneID);
+	if (pSceneInfo)
+	{
+		auto seedDnata = pSceneInfo->GetSeedObjectInfo(strSeedID);
+		if (seedDnata)
+		{
+			return seedDnata->vSeedPos;
+		}
+	}
+
+	return NFVector3::Zero();
+}
+
+const int NFSceneModule::GetSeedPWeight(const int nSceneID, const std::string& strSeedID)
+{
+	NF_SHARE_PTR<NFSceneInfo> pSceneInfo = GetElement(nSceneID);
+	if (pSceneInfo)
+	{
+		auto seedDnata = pSceneInfo->GetSeedObjectInfo(strSeedID);
+		if (seedDnata)
+		{
+			return seedDnata->nWeight;
+		}
+	}
+
+	return 0;
 }
 
 bool NFSceneModule::AddRelivePosition(const int nSceneID, const int nIndex, const NFVector3 & vPos)
@@ -428,7 +466,7 @@ bool NFSceneModule::AddSceneGroupDestroyedCallBack(const SCENE_EVENT_FUNCTOR_PTR
 
 bool NFSceneModule::CreateSceneNPC(const int nSceneID, const int nGroupID)
 {
-	return CreateSceneNPC(nSceneID, nGroupID, NFDataList());
+	return CreateSceneNPC(nSceneID, nGroupID, NFDataList::Empty());
 }
 
 bool NFSceneModule::CreateSceneNPC(const int nSceneID, const int nGroupID, const NFDataList& argList)
@@ -439,9 +477,6 @@ bool NFSceneModule::CreateSceneNPC(const int nSceneID, const int nGroupID, const
 		return false;
 	}
 
-	//prepare monster for player
-	//create monster before the player enter the scene, then we can send monster's data by one message pack
-	//if you create monster after player enter scene, then send monster's data one by one
 	NF_SHARE_PTR<SceneSeedResource> pResource = pSceneInfo->mtSceneResourceConfig.First();
 	for (; pResource; pResource = pSceneInfo->mtSceneResourceConfig.Next())
 	{
@@ -898,7 +933,7 @@ const std::string & NFSceneModule::GetRecordString(const int scene, const int gr
 		return xRecord->GetString(nRow, nCol);
 	}
 
-	return "";
+	return NULL_STR;
 }
 
 const NFGUID & NFSceneModule::GetRecordObject(const int scene, const int group, const std::string & strRecordName, const int nRow, const int nCol)
@@ -964,7 +999,7 @@ const std::string & NFSceneModule::GetRecordString(const int scene, const int gr
 		return xRecord->GetString(nRow, strColTag);
 	}
 
-	return "";
+	return NULL_STR;
 }
 
 const NFGUID & NFSceneModule::GetRecordObject(const int scene, const int group, const std::string & strRecordName, const int nRow, const std::string & strColTag)
@@ -1064,19 +1099,19 @@ bool NFSceneModule::SwitchScene(const NFGUID& self, const int nTargetSceneID, co
 		NF_SHARE_PTR<NFSceneInfo> pNewSceneInfo = this->GetElement(nTargetSceneID);
 		if (!pOldSceneInfo)
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, self, "no this container", nOldSceneID);
+			m_pLogModule->LogError(self, "no this container " + std::to_string(nOldSceneID), __FUNCTION__, __LINE__);
 			return false;
 		}
 
 		if (!pNewSceneInfo)
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, self, "no this container", nTargetSceneID);
+			m_pLogModule->LogError(self, "no this container " + std::to_string(nTargetSceneID), __FUNCTION__, __LINE__);
 			return false;
 		}
 
 		if (!pNewSceneInfo->GetElement(nTargetGroupID))
 		{
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, self, "no this group", nTargetGroupID);
+			m_pLogModule->LogError(self, "no this group " + std::to_string(nTargetGroupID), __FUNCTION__, __LINE__);
 			return false;
 		}
 		/////////
@@ -1251,16 +1286,19 @@ int NFSceneModule::OnClassCommonEvent(const NFGUID & self, const std::string & s
 	}
 	else if (CLASS_OBJECT_EVENT::COE_CREATE_HASDATA == eClassEvent)
 	{
+		NFDataList selfVar;
+		selfVar << self;
+
 		if (strClassName == NFrame::Player::ThisName())
 		{
 			//tell youself<client>, u want to enter this scene or this group
-			OnObjectListEnter(NFDataList() << self, NFDataList() << self);
+			OnObjectListEnter(selfVar, selfVar);
 
 			//tell youself<client>, u want to broad your properties and records to youself
-			OnPropertyEnter(NFDataList() << self, self);
-			OnRecordEnter(NFDataList() << self, self);
+			OnPropertyEnter(selfVar, self);
+			OnRecordEnter(selfVar, self);
 
-			OnObjectListEnterFinished(NFDataList() << self, NFDataList() << self);
+			OnObjectListEnterFinished(selfVar, selfVar);
 		}
 		else
 		{
@@ -1276,11 +1314,11 @@ int NFSceneModule::OnClassCommonEvent(const NFGUID & self, const std::string & s
 			m_pCellModule->GetCellObjectList(nObjectSceneID, nObjectGroupID, pos, valueAllPlayrObjectList, true);
 
 			//monster or others need to tell all player
-			OnObjectListEnter(valueAllPlayrObjectList, NFDataList() << self);
+			OnObjectListEnter(valueAllPlayrObjectList, selfVar);
 			OnPropertyEnter(valueAllPlayrObjectList, self);
 			OnRecordEnter(valueAllPlayrObjectList, self);
 
-			OnObjectListEnterFinished(valueAllPlayrObjectList, NFDataList() << self);
+			OnObjectListEnterFinished(valueAllPlayrObjectList, selfVar);
 
 		}
 	}
@@ -1303,6 +1341,11 @@ int NFSceneModule::OnPlayerGroupEvent(const NFGUID & self, const std::string & s
 	//example1: 0 -> 1 ==> new_group > 0 && old_group <= 0
 	//example2: 1 -> 2 ==> new_group > 0 && old_group > 0
 	//example3: 5 -> 0 ==> new_group <= 0 && old_group > 0
+
+
+	NFDataList selfVar;
+	selfVar << self;
+
 	if (nNewGroupID > 0)
 	{
 		if (nOldGroupID > 0)
@@ -1314,9 +1357,9 @@ int NFSceneModule::OnPlayerGroupEvent(const NFGUID & self, const std::string & s
 			m_pCellModule->GetCellObjectList(nSceneID, nOldGroupID, position, valueAllOldNPCListNoSelf, false, self);
 			m_pCellModule->GetCellObjectList(nSceneID, nOldGroupID, position, valueAllOldPlayerListNoSelf, true, self);
 
-			OnObjectListLeave(valueAllOldPlayerListNoSelf, NFDataList() << self);
-			OnObjectListLeave(NFDataList() << self, valueAllOldPlayerListNoSelf);
-			OnObjectListLeave(NFDataList() << self, valueAllOldNPCListNoSelf);
+			OnObjectListLeave(valueAllOldPlayerListNoSelf, selfVar);
+			OnObjectListLeave(selfVar, valueAllOldPlayerListNoSelf);
+			OnObjectListLeave(selfVar, valueAllOldNPCListNoSelf);
 		}
 		else
 		{
@@ -1331,37 +1374,42 @@ int NFSceneModule::OnPlayerGroupEvent(const NFGUID & self, const std::string & s
 		m_pCellModule->GetCellObjectList(nSceneID, nNewGroupID, position, valueAllNewNPCListNoSelf, false, self);
 		m_pCellModule->GetCellObjectList(nSceneID, nNewGroupID, position, valueAllNewPlayerListNoSelf, true, self);
 
-		OnObjectListEnter(valueAllNewPlayerListNoSelf, NFDataList() << self);
-		OnObjectListEnter(NFDataList() << self, valueAllNewPlayerListNoSelf);
-		OnObjectListEnter(NFDataList() << self, valueAllNewNPCListNoSelf);
+		OnObjectListEnter(valueAllNewPlayerListNoSelf, selfVar);
+		OnObjectListEnter(selfVar, valueAllNewPlayerListNoSelf);
+		OnObjectListEnter(selfVar, valueAllNewNPCListNoSelf);
 
 		//bc others data to u
+		NFDataList identOldVar;
+		identOldVar.Add(NFGUID());
+
 		for (int i = 0; i < valueAllNewNPCListNoSelf.GetCount(); i++)
 		{
 			NFGUID identOld = valueAllNewNPCListNoSelf.Object(i);
+			identOldVar.SetObject(0, identOld);
 
-			OnPropertyEnter(NFDataList() << self, identOld);
-			OnRecordEnter(NFDataList() << self, identOld);
+			OnPropertyEnter(selfVar, identOld);
+			OnRecordEnter(selfVar, identOld);
 
-			OnObjectListEnterFinished(NFDataList() << self, NFDataList() << identOld);
+			OnObjectListEnterFinished(selfVar, identOldVar);
 		}
 
 		//bc others data to u
 		for (int i = 0; i < valueAllNewPlayerListNoSelf.GetCount(); i++)
 		{
 			NFGUID identOld = valueAllNewPlayerListNoSelf.Object(i);
+			identOldVar.SetObject(0, identOld);
 
-			OnPropertyEnter(NFDataList() << self, identOld);
-			OnRecordEnter(NFDataList() << self, identOld);
+			OnPropertyEnter(selfVar, identOld);
+			OnRecordEnter(selfVar, identOld);
 
-			OnObjectListEnterFinished(NFDataList() << self, NFDataList() << identOld);
+			OnObjectListEnterFinished(selfVar, identOldVar);
 		}
 
 		//bc u data to others
 		OnPropertyEnter(valueAllNewPlayerListNoSelf, self);
 		OnRecordEnter(valueAllNewPlayerListNoSelf, self);
 
-		OnObjectListEnterFinished(valueAllNewPlayerListNoSelf, NFDataList() << self);
+		OnObjectListEnterFinished(valueAllNewPlayerListNoSelf, selfVar);
 	}
 	else
 	{
@@ -1374,9 +1422,9 @@ int NFSceneModule::OnPlayerGroupEvent(const NFGUID & self, const std::string & s
 			m_pCellModule->GetCellObjectList(nSceneID, nOldGroupID, position, valueAllOldNPCListNoSelf, false, self);
 			m_pCellModule->GetCellObjectList(nSceneID, nOldGroupID, position, valueAllOldPlayerListNoSelf, true, self);
 
-			OnObjectListLeave(valueAllOldPlayerListNoSelf, NFDataList() << self);
-			OnObjectListLeave(NFDataList() << self, valueAllOldPlayerListNoSelf);
-			OnObjectListLeave(NFDataList() << self, valueAllOldNPCListNoSelf);
+			OnObjectListLeave(valueAllOldPlayerListNoSelf, selfVar);
+			OnObjectListLeave(selfVar, valueAllOldPlayerListNoSelf);
+			OnObjectListLeave(selfVar, valueAllOldNPCListNoSelf);
 		}
 	}
 
@@ -1436,7 +1484,7 @@ int NFSceneModule::GetBroadCastObject(const NFGUID & self, const std::string & s
 	if (bTable)
 	{
 		//upload property can not board to itself
-		if (!pRecord->GetUpload())
+		//if (pRecord->GetUpload())
 		{
 			if (pRecord->GetPublic())
 			{
@@ -1452,7 +1500,7 @@ int NFSceneModule::GetBroadCastObject(const NFGUID & self, const std::string & s
 	else
 	{
 		//upload property can not board to itself
-		if (!pProperty->GetUpload())
+		//if (pProperty->GetUpload())
 		{
 			if (pProperty->GetPublic())
 			{

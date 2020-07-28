@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -41,7 +41,8 @@ public:
 
     virtual ~NFRecord();
 
-	virtual std::string ToString();
+    virtual std::string ToString();
+	virtual void ToMemoryCounterString(std::string& data);
 
     virtual bool IsUsed(const int nRow) const;
 
@@ -165,7 +166,7 @@ public:
 
     virtual void SetName(const std::string& strName);
 
-    virtual const NF_SHARE_PTR<NFDataList> GetInitData() const;
+    virtual NF_SHARE_PTR<NFDataList> GetInitData() const;
     virtual const NF_SHARE_PTR<NFDataList> GetTag() const;
 
     virtual const TRECORDVEC& GetRecordVec() const;

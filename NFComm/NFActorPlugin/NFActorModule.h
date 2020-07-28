@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -32,7 +32,6 @@
 #include <queue>
 #include "NFActor.h"
 #include "NFComm/NFPluginModule/NFIComponent.h"
-#include "NFComm/NFPluginModule/NFIActor.h"
 #include "NFComm/NFPluginModule/NFIActorModule.h"
 #include "NFComm/NFPluginModule/NFIKernelModule.h"
 #include "NFComm/NFPluginModule/NFIThreadPoolModule.h"
@@ -55,37 +54,32 @@ public:
 
     virtual bool Execute();
 
-	virtual NFGUID RequireActor();
+	virtual NF_SHARE_PTR<NFIActor> RequireActor();
 	virtual NF_SHARE_PTR<NFIActor> GetActor(const NFGUID nActorIndex);
 	virtual bool ReleaseActor(const NFGUID nActorIndex);
 
-    virtual bool SendMsgToActor(const NFGUID nActorIndex, const int messageID, const std::string& strArg);
+    virtual bool SendMsgToActor(const NFGUID actorIndex, const NFGUID who, const int eventID, const std::string& data, const std::string& arg = "");
 
 	virtual bool AddResult(const NFActorMessage& message);
 
 protected:
+    virtual bool SendMsgToActor(const NFGUID actorIndex, const NFActorMessage& message);
+
 	virtual bool AddEndFunc(const int subMessageID, ACTOR_PROCESS_FUNCTOR_PTR functorPtr_end);
-
-    virtual bool AddComponent(const NFGUID nActorIndex, NF_SHARE_PTR<NFIComponent> pComponent);
-	virtual bool RemoveComponent(const NFGUID nActorIndex, const std::string& strComponentName);
-	virtual NF_SHARE_PTR<NFIComponent> FindComponent(const NFGUID nActorIndex, const std::string& strComponentName);
-
 
 	virtual bool ExecuteEvent();
 	virtual bool ExecuteResultEvent();
 
-
 private:
+    bool test = false;
+
     NFIKernelModule* m_pKernelModule;
     NFIThreadPoolModule* m_pThreadPoolModule;
 
-	NFMapEx<NFGUID, NFIActor> mxActorMap;
+	std::map<NFGUID, NF_SHARE_PTR<NFIActor>> mxActorMap;
 
 	NFQueue<NFActorMessage> mxResultQueue;
 	NFMapEx<int, ACTOR_PROCESS_FUNCTOR> mxEndFunctor;
-
-    //for schedule
-    std::map<NFGUID, int> mActorMessageCount;
 };
 
 #endif

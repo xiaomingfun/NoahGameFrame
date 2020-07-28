@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -88,6 +88,7 @@ public:
     virtual bool Changed() const;
 
     virtual std::string ToString();
+    virtual void ToMemoryCounterString(std::string& data);
     virtual bool FromString(const std::string& strData);
     virtual bool DeSerialization();
 

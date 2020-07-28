@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -36,7 +36,11 @@
 #include "NFComm/NFPluginModule/NFIHttpServerModule.h"
 #include "NFComm/NFPluginModule/NFILoginToMasterModule.h"
 #include "NFComm/NFPluginModule/NFILoginNet_ServerModule.h"
-#include "NFComm/NFPluginModule/NFILoginNet_HttpServerModule.h"
+
+class NFILoginNet_HttpServerModule : public NFIModule
+{
+
+};
 
 class NFLoginNet_HttpServerModule
 	: public NFILoginNet_HttpServerModule
@@ -45,6 +49,7 @@ public:
 	NFLoginNet_HttpServerModule(NFIPluginManager* p)
 	{
 		pPluginManager = p;
+        m_bIsExecute = true;
 	}
 
 	virtual bool Init();

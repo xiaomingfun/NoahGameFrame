@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -91,9 +91,9 @@ void NFGameServerToWorldModule::Register(NFINet* pNet)
 				if (pServerData)
 				{
 					int nTargetID = pServerData->nGameID;
-					m_pNetClientModule->SendToServerByPB(nTargetID, NFMsg::EGameMsgID::EGMI_GTW_GAME_REGISTERED, xMsg);
+					m_pNetClientModule->SendToServerByPB(nTargetID, NFMsg::EGameMsgID::GTW_GAME_REGISTERED, xMsg);
 
-					m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, pData->server_id()), pData->server_name(), "Register");
+					m_pLogModule->LogInfo(NFGUID(0, pData->server_id()), pData->server_name(), "Register");
 				}
 			}
 		}
@@ -136,7 +136,7 @@ void NFGameServerToWorldModule::ServerReport()
 				reqMsg.set_server_state(NFMsg::EST_NARMAL);
 				reqMsg.set_server_type(nServerType);
 
-				m_pNetClientModule->SendToAllServerByPB(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::EGMI_STS_SERVER_REPORT, reqMsg);
+				m_pNetClientModule->SendToAllServerByPB(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::STS_SERVER_REPORT, reqMsg, NFGUID());
 			}
 		}
 	}
@@ -144,7 +144,7 @@ void NFGameServerToWorldModule::ServerReport()
 
 bool NFGameServerToWorldModule::AfterInit()
 {
-	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::EGMI_STS_NET_INFO, this, &NFGameServerToWorldModule::OnServerInfoProcess);
+	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::STS_NET_INFO, this, &NFGameServerToWorldModule::OnServerInfoProcess);
 
 	m_pNetClientModule->AddReceiveCallBack(NF_SERVER_TYPES::NF_ST_WORLD, this, &NFGameServerToWorldModule::TransPBToProxy);
 	
@@ -170,7 +170,7 @@ bool NFGameServerToWorldModule::AfterInit()
 		{
 			std::ostringstream strLog;
 			strLog << "Cannot find current server, AppID = " << nCurAppID;
-			m_pLogModule->LogNormal(NFILogModule::NLL_ERROR_NORMAL, NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
+			m_pLogModule->LogError(NULL_OBJECT, strLog, __FUNCTION__, __LINE__);
 			NFASSERT(-1, "Cannot find current server", __FILE__, __FUNCTION__);
 			exit(0);
 		}
@@ -255,7 +255,7 @@ void NFGameServerToWorldModule::OnSocketWSEvent(const NFSOCK nSockIndex, const N
 	}
 	else  if (eEvent & NF_NET_EVENT_CONNECTED)
 	{
-		m_pLogModule->LogNormal(NFILogModule::NLL_INFO_NORMAL, NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED", "connected success", __FUNCTION__, __LINE__);
+		m_pLogModule->LogInfo(NFGUID(0, nSockIndex), "NF_NET_EVENT_CONNECTED connected success", __FUNCTION__, __LINE__);
 		Register(pNet);
 
 	}
@@ -280,35 +280,40 @@ int NFGameServerToWorldModule::OnObjectClassEvent(const NFGUID& self, const std:
 
 void NFGameServerToWorldModule::SendOnline(const NFGUID& self)
 {
-	NFMsg::RoleOnlineNotify xMsg;
-	const NFGUID& xClan = m_pKernelModule->GetPropertyObject(self, NFrame::Player::Clan_ID());
-	const int& gateID = m_pKernelModule->GetPropertyInt(self, NFrame::Player::GateID());
-	const std::string& playerName = m_pKernelModule->GetPropertyString(self, NFrame::Player::Name());
-	const int& bp = m_pKernelModule->GetPropertyInt(self, NFrame::Player::Cup());
+	if (m_pKernelModule->ExistObject(self))
+	{
+		NFMsg::RoleOnlineNotify xMsg;
+		//const NFGUID& xClan = m_pKernelModule->GetPropertyObject(self, NFrame::Player::Clan_ID());
+		const int& gateID = m_pKernelModule->GetPropertyInt(self, NFrame::Player::GateID());
+		const std::string& playerName = m_pKernelModule->GetPropertyString(self, NFrame::Player::Name());
+		const int bp = 0;//m_pKernelModule->GetPropertyInt(self, NFrame::Player::Cup());
 
-	*xMsg.mutable_self() = NFINetModule::NFToPB(self);
-	*xMsg.mutable_clan() = NFINetModule::NFToPB(xClan);
-	xMsg.set_game(pPluginManager->GetAppID());
-	xMsg.set_proxy(gateID);
-	xMsg.set_name(playerName);
-	xMsg.set_bp(bp);
+		*xMsg.mutable_self() = NFINetModule::NFToPB(self);
+		*xMsg.mutable_clan() = NFINetModule::NFToPB(NFGUID());
+		xMsg.set_game(pPluginManager->GetAppID());
+		xMsg.set_proxy(gateID);
+		xMsg.set_name(playerName);
+		xMsg.set_bp(bp);
 
-	m_pNetClientModule->SendToAllServerByPB(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::EGMI_ACK_ONLINE_NOTIFY, xMsg);
+		m_pNetClientModule->SendToAllServerByPB(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::ACK_ONLINE_NOTIFY, xMsg, self);
+	}
 }
 
 void NFGameServerToWorldModule::SendOffline(const NFGUID& self)
 {
-	NFMsg::RoleOfflineNotify xMsg;
+	if (m_pKernelModule->ExistObject(self))
+	{
+		NFMsg::RoleOfflineNotify xMsg;
 
-	const NFGUID& xClan = m_pKernelModule->GetPropertyObject(self, NFrame::Player::Clan_ID());
+		//const NFGUID& xClan = m_pKernelModule->GetPropertyObject(self, NFrame::Player::Clan_ID());
 
-	*xMsg.mutable_self() = NFINetModule::NFToPB(self);
-	*xMsg.mutable_clan() = NFINetModule::NFToPB(xClan);
-	xMsg.set_game(pPluginManager->GetAppID());
-	xMsg.set_proxy(0);
+		*xMsg.mutable_self() = NFINetModule::NFToPB(self);
+		*xMsg.mutable_clan() = NFINetModule::NFToPB(NFGUID());
+		xMsg.set_game(pPluginManager->GetAppID());
+		xMsg.set_proxy(0);
 
-	m_pNetClientModule->SendToAllServerByPB(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::EGMI_ACK_OFFLINE_NOTIFY, xMsg);
-
+		m_pNetClientModule->SendToAllServerByPB(NF_SERVER_TYPES::NF_ST_WORLD, NFMsg::ACK_OFFLINE_NOTIFY, xMsg, self);
+	}
 }
 
 void NFGameServerToWorldModule::TransPBToProxy(const NFSOCK nSockIndex, const int nMsgID, const char* msg, const uint32_t nLen)

@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -34,7 +34,7 @@
 #include "NFComm/NFPluginModule/NFIPropertyConfigModule.h"
 #include "NFComm/NFPluginModule/NFIPluginManager.h"
 #include "NFComm/NFMessageDefine/NFProtocolDefine.hpp"
-#include "NFComm/NFPluginModule/NFILevelModule.h"
+#include "NFComm/NFPluginModule/NFILogModule.h"
 
 class NFPropertyModule : public NFIPropertyModule
 {
@@ -50,12 +50,10 @@ public:
     virtual bool Execute();
     virtual bool AfterInit();
 
-    virtual int RefreshBaseProperty(const NFGUID& self);
-
     virtual int64_t GetPropertyValue(const NFGUID& self, const std::string& strPropertyName, const NFPropertyGroup eGroupType);
     virtual int SetPropertyValue(const NFGUID& self, const std::string& strPropertyName, const NFPropertyGroup eGroupType, const int64_t nValue);
 
-	virtual bool CalculatePropertyValue(const NFGUID& self, const std::string& strPropertyName, const NFPropertyGroup eGroupType, const int64_t nValue, const bool bPositive = false);
+    virtual bool AddExp(const NFGUID& self, const int64_t nExp);
 
     virtual bool FullHPMP(const NFGUID& self);
     virtual bool AddHP(const NFGUID& self, const int nValue);
@@ -81,19 +79,28 @@ public:
     virtual bool ConsumeDiamond(const NFGUID& self, const int nValue);
     virtual bool EnoughDiamond(const NFGUID& self, const int nValue);
 
+	virtual void ActiveExtraController();
+
 protected:
+    void RefreshBaseProperty(const NFGUID& self);
+
+    void RefreshAllProperty(const NFGUID& self);
+
     int OnObjectClassEvent(const NFGUID& self, const std::string& strClassName, const CLASS_OBJECT_EVENT eClassEvent, const NFDataList& var);
 
     int OnObjectLevelEvent(const NFGUID& self, const std::string& strPropertyName, const NFData& oldVar, const NFData& newVar);
+    int OnObjectConfigIDEvent(const NFGUID& self, const std::string& strPropertyName, const NFData& oldVar, const NFData& newVar);
 
     int OnRecordEvent(const NFGUID& self, const RECORD_EVENT_DATA& xEventData, const NFData& oldVar, const NFData& newVar);
 
 private:
+	bool activeExtraController = false;
+
     NFIKernelModule* m_pKernelModule;
     NFIPropertyConfigModule* m_pPropertyConfigModule;
     NFIElementModule* m_pElementModule;
     NFIClassModule* m_pClassModule;
-    NFILevelModule* m_pLevelModule;
+    NFILogModule* m_pLogModule;
 };
 
 

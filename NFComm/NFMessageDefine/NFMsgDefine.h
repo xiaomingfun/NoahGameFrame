@@ -3,7 +3,7 @@ This file is part of:
 NoahFrame
 https://github.com/ketoo/NoahGameFrame
 
-Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
 File creator: lvsheng.huang
 
@@ -35,9 +35,6 @@ limitations under the License.
 #include "NFMsgBase.pb.h"
 #include "NFMsgPreGame.pb.h"
 #include "NFMsgShare.pb.h"
-#include "NFMsgExtra.pb.h"
-#include "NFMsgFriend.pb.h"
-#include "NFMsgTeam.pb.h"
 #include "NFProtocolDefine.hpp"
 
 #ifdef _MSC_VER

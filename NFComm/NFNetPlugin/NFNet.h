@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -26,6 +26,8 @@
 #ifndef NF_NET_H
 #define NF_NET_H
 
+#include <set>
+#include <algorithm>
 #include "NFINet.h"
 #include <thread>
 #include <event2/bufferevent.h>
@@ -59,12 +61,12 @@ public:
     }
 
     template<typename BaseType>
-    NFNet(BaseType* pBaseType, void (BaseType::*handleRecieve)(const NFSOCK, const int, const char*, const uint32_t), void (BaseType::*handleEvent)(const NFSOCK, const NF_NET_EVENT, NFINet*), bool tcpStream = false)
+    NFNet(BaseType* pBaseType, void (BaseType::*handleReceive)(const NFSOCK, const int, const char*, const uint32_t), void (BaseType::*handleEvent)(const NFSOCK, const NF_NET_EVENT, NFINet*), bool tcpStream = false)
     {
         mxBase = NULL;
         listener = NULL;
 
-        mRecvCB = std::bind(handleRecieve, pBaseType, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        mRecvCB = std::bind(handleReceive, pBaseType, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         mEventCB = std::bind(handleEvent, pBaseType, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         mstrIP = "";
         mnPort = 0;
@@ -137,7 +139,9 @@ protected:
 private:
     //<fd,object>
 
+	//std::multiset<NetObject*> mLiveBeatMap;
 
+	//Use share pointer replace C-style pointer
     std::map<NFSOCK, NetObject*> mmObject;
     std::vector<NFSOCK> mvRemoveObject;
 

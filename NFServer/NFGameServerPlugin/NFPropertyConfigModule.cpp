@@ -3,7 +3,7 @@
                 NoahFrame
             https://github.com/ketoo/NoahGameFrame
 
-   Copyright 2009 - 2019 NoahFrame(NoahGameFrame)
+   Copyright 2009 - 2020 NoahFrame(NoahGameFrame)
 
    File creator: lvsheng.huang
    
@@ -52,19 +52,38 @@ bool NFPropertyConfigModule::AfterInit()
     return true;
 }
 
-NFINT64 NFPropertyConfigModule::CalculateBaseValue(const int nJob, const int nLevel, const std::string& strProperty)
+const std::string& NFPropertyConfigModule::GetInitPropertyID(const int nJob,  const int nLevel)
 {
-	NF_SHARE_PTR <NFMapEx<int, std::string> > xPropertyMap = mhtCoefficienData.GetElement(nJob);
-	if (xPropertyMap)
+    std::map<NFGUID, std::string>& propertyData = GetData();
+	auto it = propertyData.find(NFGUID(nJob, nLevel));
+	if (it != propertyData.end())
 	{
-		NF_SHARE_PTR<std::string> xRefPropertyIDName = xPropertyMap->GetElement(nLevel);
-		if (xRefPropertyIDName)
-		{
-			return m_pElementModule->GetPropertyInt(*xRefPropertyIDName, strProperty);
-		}
-    }
+        return it->second;
+	}
 
-    return 0;
+    return NULL_STR;
+}
+
+void NFPropertyConfigModule::ClearInitPropertyData()
+{
+    std::map<NFGUID, std::string>& propertyData = GetData();
+    propertyData.clear();
+}
+
+void NFPropertyConfigModule::AddInitPropertyID(const int nJob, const int nLevel, const std::string& data)
+{
+    std::map<NFGUID, std::string>& propertyData = GetData();
+
+	auto it = propertyData.find(NFGUID(nJob, nLevel));
+	if (it != propertyData.end())
+	{
+        propertyData.insert(std::make_pair(NFGUID(nJob, nLevel), data));
+	}
+}
+
+void NFPropertyConfigModule::SetEx(const bool b)
+{
+    mbExtra = b;
 }
 
 void NFPropertyConfigModule::Load()
@@ -80,39 +99,32 @@ void NFPropertyConfigModule::Load()
             NF_SHARE_PTR<NFIPropertyManager> pPropertyManager = m_pElementModule->GetPropertyManager(strId);
             if (pPropertyManager)
             {
-                int nJob = m_pElementModule->GetPropertyInt32(strId, NFrame::InitProperty::Job());
-                int nLevel = m_pElementModule->GetPropertyInt32(strId, NFrame::InitProperty::Level());
-                std::string strEffectData = m_pElementModule->GetPropertyString(strId, NFrame::InitProperty::EffectData());
+                const int nJob = m_pElementModule->GetPropertyInt32(strId, NFrame::InitProperty::Job());
+                const int nLevel = m_pElementModule->GetPropertyInt32(strId, NFrame::InitProperty::Level());
 
-				NF_SHARE_PTR <NFMapEx<int, std::string> > xPropertyMap = mhtCoefficienData.GetElement(nJob);
-				if (!xPropertyMap)
+                std::map<NFGUID, std::string>& propertyData = GetData();
+
+				auto it = propertyData.find(NFGUID(nJob, nLevel));
+				if (it == propertyData.end())
 				{
-					xPropertyMap = NF_SHARE_PTR<NFMapEx<int, std::string>>(NF_NEW NFMapEx<int, std::string>());
-					mhtCoefficienData.AddElement(nJob, xPropertyMap);
+                    propertyData.insert(std::make_pair(NFGUID(nJob, nLevel), strId));
 				}
-
-				NF_SHARE_PTR<std::string> xRefPropertyIDName = xPropertyMap->GetElement(nLevel);
-				if (!xRefPropertyIDName)
-				{
-					xRefPropertyIDName = NF_SHARE_PTR<std::string>(NF_NEW std::string(strEffectData));
-				}
-
-				xPropertyMap->AddElement(nLevel, xRefPropertyIDName);
             }
         }
     }
 }
 
+std::map<NFGUID, std::string>& NFPropertyConfigModule::GetData()
+{
+    return mhtCoefficientData;
+}
+
 bool NFPropertyConfigModule::LegalLevel(const int nJob, const int nLevel)
 {
-	NF_SHARE_PTR <NFMapEx<int, std::string> > xPropertyMap = mhtCoefficienData.GetElement(nJob);
-	if (xPropertyMap)
+	auto it = mhtCoefficientData.find(NFGUID(nJob, nLevel));
+	if (it != mhtCoefficientData.end())
 	{
-		NF_SHARE_PTR<std::string> xRefPropertyIDName = xPropertyMap->GetElement(nLevel);
-		if (xRefPropertyIDName)
-		{
-			return true;
-		}
+		return true;
 	}
 
 
